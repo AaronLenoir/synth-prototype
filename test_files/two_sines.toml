@@ -1,0 +1,34 @@
+[rack]
+bitrate=48000
+
+[[instruments]]
+type="Mixer"
+name="mixer"
+
+[[instruments]]
+type="SignalSource"
+name="generator1"
+[instruments.parameters]
+frequency=200
+
+[[instruments]]
+type="SignalSource"
+name="generator2"
+[instruments.parameters]
+frequency=1
+
+# [source instrument, source port, target instrument, target port]
+[connections]
+endpoints = [
+    # Connect generator1 with mixer channel 1
+    ["generator1",  "OUT_LEFT", "mixer", "IN_LEFT_01" ],
+    ["generator1", "OUT_RIGHT", "mixer", "IN_RIGHT_01" ],
+
+    # Connect generator2 with mixer channel 2
+    ["generator2", "OUT_LEFT", "mixer", "IN_LEFT_02" ],
+    ["generator2", "OUT_RIGHT", "mixer", "IN_RIGHT_02" ],
+
+    # MAIN AUDIO OUT
+    ["mixer", "OUT_LEFT", "__AUDIO_OUT", "IN_LEFT" ],
+    ["mixer", "OUT_RIGHT", "__AUDIO_OUT", "IN_RIGHT" ],
+]

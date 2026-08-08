@@ -1,0 +1,192 @@
+An instrument consists of
+    - name (unique)
+    - >= 0 input ports
+    - >= 0 output ports
+
+An output port wraps a single ring buffer (producer)
+    - it can be connected to the input port (consumer)
+    - cannot connect 1-n or n-1
+    - ports also have a name: <instrument_name>#<port_name>
+
+The instrument will write to the output ports
+The instrument reads from the input ports 
+
+--
+
+What we need to know: delta per sample (percentage)
+
+What influences this:
+
+    - frequency (Hz)
+    - sample_count
+    - time_window (ns)
+
+wavelength = 1_000_000_000 ns / frequency (Hz)
+samplelength = time_window / sample_count
+
+delta (%) = samplelength / wavelength -> how much of the wave we iterate for every sample
+
+delta (%) to index in lookup table:
+
+    n = data points in lookup table (e.g. 100)
+
+    index = (n * delta) as usize; 
+
+--
+
+[rack]
+bitrate=48000
+
+[[instruments]]
+type="Mixer"
+name="mixer1"
+
+[[instruments]]
+type="SignalSource"
+name="generator1"
+[instruments.parameters]
+frequency=1000
+
+[[instruments]]
+type="RandomGenerator"
+name="generator2"
+
+[[connections]]
+source = { instrument = "generator1", port = "OUT_LEFT" }
+target = { instrument = "mixer1", port = "IN_LEFT_01" }
+
+--
+
+Sequencer
+
+BPM
+Beat = certain note (a/b = meter -> a = how many notes, b = 1/b notes)
+    4/4 => 4 quarter notes per beat
+    3/4 => 3 quarter notes per beat
+    3/8 => 3 eight notes per beat
+Beats in a bar (measure): 4
+
+In sequencer we want to indicate where something takes place, we need to know the meter and the tempo (BPM)
+
+The position can be expressed in:
+
+    - which bar 
+    - which beat
+    - offset within the beat (1/2) - halfway through that beat
+
+duration can be expressed in a fraction of a beat:
+
+    1 => lasts 1 beat 
+    1/2 => lasts half a beat
+    3/2 => lasts 1,5 beats 
+    ...
+
+you may also want to start a pattern from a point, for a certain duration, and repeat the pattern at a certain temp:
+
+    tempo: 1 (1 beat)
+    tempo: 1/2 (half a beat)
+    tempo: 2 (2 beats)
+
+    Each item in the pattern is executed with that tempo and then repeated. For notes this could be:
+
+    [C3, D3, C3, D3]
+
+    But for other things (message to instrument) we could say:
+
+    tempo: 1/2
+    message: frequency
+    instrument: generator1
+    [500, 300]
+    -> this sends a set frequency message to the generator every half a beat switching between 500 and 300
+
+    probably a note will also be some message
+
+Now this all needs to fit into TOML 
+
+[sequencer]
+tempo = 120 # bpm
+
+[[sequences]]
+start = { bar = 1, beat = 1, offset = 0 }
+duration = 3
+step = 1/2
+
+instrument = "generator1"
+message = "set"
+
+events = [
+    { parameter = "frequency", value = 500 },
+    { parameter = "frequency", value = 500 }
+]
+
+
+[[sequences]]
+start = { bar = 1, beat = 1, offset = 0 }
+duration = 3
+step = 1
+
+instrument = "piano1"
+message = "note_on"
+
+events = [
+    { value = 500 },
+    { },
+    { },
+    { value = 300 }
+]
+
+For the sequence the events should map to a list of hashmaps which contain the parameters. 
+
+    use std::collections::HashMap;
+    use serde::Deserialize;
+
+    #[derive(Deserialize)]
+    struct Sequence {
+        instrument: String,
+        message: String,
+        events: Vec<HashMap<String, toml::Value>>,
+    }
+
+--
+
+Sequencer itself:
+
+Works with update() like instruments.
+
+Knows the tempo (bpm)
+
+Knows the meter (4/4, 3/4 ...)
+
+Will OWN the / a Sender for the message channel
+
+Knows where it is at any point in time
+
+Has a list of events and when to send them 
+
+At the appropriate time puts messages on the channel 
+
+List of messages (= a CLIP) is its own thing:
+
+    - start time (bar / beat / offset) can translate to f32 or keep as bar beat offset?
+        = Position
+            - Bar u32
+            - Beat u32 
+            - Offset f32
+    - duration (in fractions of a beat) f32
+        = Duration
+    - interval (in fractions of a beat = 1 is every beat) f32
+        = Interval
+    - target instrument id InstrumentId
+    - command InstrumentCommand
+    - series of InstrumentCommand to send at each step (pattern will iterate) = we'll call it events
+
+Two questions:
+
+    - Who keeps track where we are in the sequence, I suggest the sequence internally
+    - Who checks if something should be sent, maybe also the sequence:
+        - sequence.get_message(position)
+        - This produces a message when appropriate 
+
+Events:
+
+    - Vec<InstrumentCommand>
