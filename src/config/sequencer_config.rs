@@ -1,0 +1,10 @@
+use serde::Deserialize;
+
+use crate::config::{clip_config::ClipConfig, meter_config::MeterConfig};
+
+#[derive(Deserialize, PartialEq, Debug, Default)]
+pub struct SequencerConfig {
+    pub tempo: u32,
+    pub meter: MeterConfig,
+    pub clips: Vec<ClipConfig>,
+}

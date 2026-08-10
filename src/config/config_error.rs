@@ -4,4 +4,5 @@ use toml::de::Error;
 pub enum ConfigError {
     Unknown,
     TomlError(Error),
+    UnknownInstrumentName(String),
 }

@@ -4,7 +4,9 @@ use crate::config::{
         ConnectionConfig, EndPointConfig, EndPointConfigTuple, EndPointConfigTuples,
     },
     instrument_config::InstrumentConfig,
+    meter_config::MeterConfig,
     rack_config::RackConfig,
+    sequencer_config::SequencerConfig,
 };
 use serde::Deserialize;
 
@@ -17,6 +19,8 @@ pub struct Config {
     connection_tuples: EndPointConfigTuples,
     #[serde(default)]
     pub connections: Vec<ConnectionConfig>,
+    #[serde(default)]
+    pub sequencer: SequencerConfig,
 }
 
 impl Config {
@@ -26,6 +30,14 @@ impl Config {
             instruments: vec![],
             connection_tuples: EndPointConfigTuples { endpoints: vec![] },
             connections: vec![],
+            sequencer: SequencerConfig {
+                tempo: 120,
+                meter: MeterConfig {
+                    numerator: 4,
+                    denominator: 4,
+                },
+                clips: vec![],
+            },
         }
     }
 
@@ -37,14 +49,27 @@ impl Config {
 
         Ok(config)
     }
+
+    pub fn instrument_config_by_name(&self, name: &str) -> Result<&InstrumentConfig, ConfigError> {
+        let instrument_config = self.instruments.iter().find(|i| i.name() == name);
+        if instrument_config.is_none() {
+            Err(ConfigError::UnknownInstrumentName(name.to_string()))
+        } else {
+            Ok(instrument_config.unwrap())
+        }
+    }
 }
 
 #[cfg(test)]
-mod input_port_tests {
+mod config_tests {
     use std::collections::HashMap;
 
+    use slotmap::new_key_type;
+
     use crate::config::{
-        connection_config::EndPointConfig, signal_source_parameters::SignalSourceParameters,
+        clip_config::ClipConfig, connection_config::EndPointConfig,
+        musical_position::MusicalPosition, pattern_config::PatternConfig,
+        signal_source_parameters::SignalSourceParameters,
     };
 
     use super::*;
@@ -165,7 +190,6 @@ mod input_port_tests {
         "#,
         )
         .unwrap();
-
         assert_eq!(
             sut.connections,
             vec![ConnectionConfig {
@@ -178,6 +202,89 @@ mod input_port_tests {
                     port: "IN_LEFT_01".to_string()
                 },
             }]
+        );
+    }
+
+    #[test]
+    fn from_str_parses_sequencer_and_clips() {
+        let sut = Config::from_str(
+            r#"
+        [rack]
+        bitrate = 48000
+        
+        [[instruments]]
+        type="Mixer"
+        name="mixer1"
+
+        [sequencer]
+        tempo=120
+        meter={ numerator = 4, denominator = 4 }
+
+        [[sequencer.clips]]
+        start={ bar = 1, beat = 1, offset = 0.0 }
+        end={ bar = 2, beat = 1, offset = 0.0 } 
+        target = "mixer1"
+
+        [sequencer.clips.pattern]
+        period = 1
+        command = "set"
+
+        events = [
+            { parameter = "frequency", value = 500 },
+            { parameter = "frequency", value = 300 },
+        ]
+
+        "#,
+        )
+        .unwrap();
+
+        assert_eq!(sut.sequencer.tempo, 120);
+
+        assert_eq!(
+            sut.sequencer.meter,
+            MeterConfig {
+                numerator: 4,
+                denominator: 4
+            }
+        );
+
+        assert_eq!(sut.sequencer.clips.len(), 1);
+
+        assert_eq!(
+            sut.sequencer.clips[0],
+            ClipConfig {
+                start: MusicalPosition {
+                    bar: 1,
+                    beat: 1,
+                    offset: 0.0
+                },
+                end: MusicalPosition {
+                    bar: 2,
+                    beat: 1,
+                    offset: 0.0
+                },
+                target: "mixer1".to_string(),
+                pattern: PatternConfig {
+                    period: 1.0,
+                    command: "set".to_string(),
+                    events: vec![
+                        HashMap::from([
+                            (
+                                "parameter".to_string(),
+                                toml::Value::String("frequency".to_string())
+                            ),
+                            ("value".to_string(), toml::Value::Integer(500)),
+                        ]),
+                        HashMap::from([
+                            (
+                                "parameter".to_string(),
+                                toml::Value::String("frequency".to_string())
+                            ),
+                            ("value".to_string(), toml::Value::Integer(300)),
+                        ]),
+                    ],
+                },
+            }
         );
     }
 }

@@ -190,3 +190,12 @@ Two questions:
 Events:
 
     - Vec<InstrumentCommand>
+
+--
+
+The SequenceBuilder is going to need the InstrumentId and the ParameterId
+
+    - instrument id it must get from the rack - so the SequenceBuilder must receive the previously built rack
+    - parameter id can (currently at least) be fixed per InstrumentConfig type and InstrumentConfig can offer a resolve function:
+        - config.get_instrument_config(pattern.target).resolve_parameter_id(parameter_name)
+    - Then in resolve_parameter, per instrument we add the mapping to the internal constants for each instrument

@@ -113,7 +113,7 @@ mod clip_tests {
             sender,
         );
 
-        sequencer.add_clip(get_clip_single_command(TimelineRange { 
+        sequencer.add_clip(get_clip_single_command(TimelineRange {
             start: 0.0,
             end: 10.0,
         }));
@@ -162,7 +162,7 @@ mod clip_tests {
         sut.update(1_000_000_000, 1000).expect("unexpected error");
 
         // After 1 second, our pattern should've sent two commands, we should see them on the channel
-        let mut commands: Vec<RackCommand> = vec![]; 
+        let mut commands: Vec<RackCommand> = vec![];
         commands.push(rx.recv().expect("unexpected error"));
         commands.push(rx.recv().expect("unexpected error"));
 

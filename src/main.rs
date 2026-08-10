@@ -8,7 +8,8 @@ use std::{
 use rand::{RngExt, seq};
 
 use crate::{
-    config::{config::Config, rack_builder::RackBuilder, rack_config::RackConfig}, core::{
+    config::{config::Config, rack_builder::RackBuilder, rack_config::RackConfig},
+    core::{
         commands::{
             InstrumentCommand,
             RackCommand::{self},
@@ -18,12 +19,17 @@ use crate::{
         update_loop::{UpdateLoop, UpdateLoopError},
         update_loop_app::DefaultApp,
         update_loop_config::UpdateLoopConfig,
-    }, instruments::{
+    },
+    instruments::{
         audio_out::AudioOutPorts,
         mixer::{Mixer, MixerInPorts, MixerOutPorts},
         random_generator::{RandomGenerator, RandomGeneratorPorts},
         signal_source::{SignalSource, SignalSourceParameters, SignalSourcePorts},
-    }, sequencer::{clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange},
+    },
+    sequencer::{
+        clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer,
+        timeline_range::TimelineRange,
+    },
 };
 
 mod config;
@@ -36,26 +42,47 @@ fn main() {
 
     let mut rack = Rack::from_config_file(rx, "test_files/two_sines.toml".to_string()).unwrap();
 
-    let mut sequencer = Sequencer::new(120, Meter { numerator: 4, denominator: 4 }, tx);
+    let mut sequencer = Sequencer::new(
+        120,
+        Meter {
+            numerator: 4,
+            denominator: 4,
+        },
+        tx,
+    );
 
     rack.play();
     sequencer.play();
 
     let id = rack.instrument_id("generator1").unwrap();
-    let clip1 = Clip::new(TimelineRange { start: 0.0, end: 8.0 }, id, Pattern {
-        period: 1.0,
-        commands: vec![
-            InstrumentCommand::Set(SignalSourceParameters::FREQUENCY, 300.0),
-            InstrumentCommand::Set(SignalSourceParameters::FREQUENCY, 330.0)
-        ]
-    });
-    let clip2 = Clip::new(TimelineRange { start: 8.0, end: 160.0 }, id, Pattern {
-        period: 1.0,
-        commands: vec![
-            InstrumentCommand::Set(SignalSourceParameters::FREQUENCY, 300.0),
-            InstrumentCommand::Set(SignalSourceParameters::FREQUENCY, 330.0)
-        ]
-    });
+    let clip1 = Clip::new(
+        TimelineRange {
+            start: 0.0,
+            end: 8.0,
+        },
+        id,
+        Pattern {
+            period: 1.0,
+            commands: vec![
+                InstrumentCommand::Set(SignalSourceParameters::FREQUENCY, 300.0),
+                InstrumentCommand::Set(SignalSourceParameters::FREQUENCY, 330.0),
+            ],
+        },
+    );
+    let clip2 = Clip::new(
+        TimelineRange {
+            start: 8.0,
+            end: 160.0,
+        },
+        id,
+        Pattern {
+            period: 0.5,
+            commands: vec![
+                InstrumentCommand::Set(SignalSourceParameters::FREQUENCY, 300.0),
+                InstrumentCommand::Set(SignalSourceParameters::FREQUENCY, 330.0),
+            ],
+        },
+    );
     sequencer.add_clip(clip1);
     sequencer.add_clip(clip2);
 
@@ -67,4 +94,3 @@ fn main() {
         Err(UpdateLoopError::NotStarted) => println!("Update Loop could not start"),
     }
 }
-
