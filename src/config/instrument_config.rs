@@ -53,6 +53,7 @@ impl InstrumentConfig {
         if parameters.len() == 0 {
             return Ok(InstrumentCommand::Nop());
         }
+
         match name {
             "set" => {
                 let parameter = parameters["parameter"]
@@ -69,5 +70,3 @@ impl InstrumentConfig {
         }
     }
 }
-
-// TODO: Test the logic for InstrumentConfig

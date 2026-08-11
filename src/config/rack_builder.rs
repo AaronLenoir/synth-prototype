@@ -5,12 +5,10 @@ use crate::{
         config::Config,
         connection_config::{ConnectionConfig, EndPointConfig},
         instrument_config::InstrumentConfig::{self},
-        rack_config::RackConfig,
     },
     core::{
         commands::RackCommand,
         connection::{Connection, EndPoint},
-        instrument,
         instrument_ports::PortId,
         rack::{Rack, RackError},
     },
@@ -19,7 +17,6 @@ use crate::{
 
 #[derive(Debug)]
 pub enum RackBuilderError {
-    Unknown,
     UnknownPort(String, String),
     RackError(RackError),
 }
@@ -131,18 +128,13 @@ impl RackBuilder {
 #[cfg(test)]
 mod rack_builder_tests {
     use std::{
-        collections::HashMap,
         sync::mpsc::{self, Sender},
     };
 
-    use serde::de::Unexpected::Seq;
-
 use crate::{
         config::{
-            connection_config::{ConnectionConfig, EndPointConfig},
-            signal_source_parameters::SignalSourceParameters,
-        },
-        instruments::mixer::{MixerInPorts, MixerOutPorts},
+            connection_config::{ConnectionConfig, EndPointConfig}, rack_config::RackConfig,
+        }, instruments::mixer::{MixerInPorts, MixerOutPorts},
     };
 
     use super::*;

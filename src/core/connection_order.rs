@@ -5,7 +5,6 @@ use topo_sort::{SortResults, TopoSort};
 
 pub struct ConnectionOrder {
     pub instruments: Vec<String>,
-    pub is_partial: bool,
 }
 
 impl ConnectionOrder {
@@ -17,11 +16,9 @@ impl ConnectionOrder {
         match topo_sort.into_vec_nodes() {
             SortResults::Full(nodes) => Self {
                 instruments: nodes,
-                is_partial: false,
             },
             SortResults::Partial(nodes) => Self {
                 instruments: nodes,
-                is_partial: true,
             },
         }
     }
@@ -101,7 +98,6 @@ mod connection_order_tests {
 
         let sut = ConnectionOrder::new(&vec![connection_1, connection_2, connection_3]);
 
-        assert_eq!(sut.is_partial, false);
         assert_eq!(
             sut.instruments,
             vec!["A".to_string(), "B".to_string(), "C".to_string()]

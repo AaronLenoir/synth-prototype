@@ -1,34 +1,20 @@
 use std::{
-    fs,
     sync::mpsc::{self, Receiver, Sender},
-    thread,
-    time::Duration,
 };
 
-use rand::{RngExt, seq};
-
 use crate::{
-    config::{config::Config, rack_builder::RackBuilder, rack_config::RackConfig},
+    config::{config::Config},
     core::{
         commands::{
-            InstrumentCommand,
             RackCommand::{self},
         },
-        connection::{Connection, EndPoint},
-        rack::{InstrumentId, Rack},
+        rack::{Rack},
         update_loop::{UpdateLoop, UpdateLoopError},
         update_loop_app::DefaultApp,
         update_loop_config::UpdateLoopConfig,
     },
-    instruments::{
-        audio_out::AudioOutPorts,
-        mixer::{Mixer, MixerInPorts, MixerOutPorts},
-        random_generator::{RandomGenerator, RandomGeneratorPorts},
-        signal_source::{SignalSource, SignalSourceParameters, SignalSourcePorts},
-    },
     sequencer::{
-        clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer,
-        timeline_range::TimelineRange,
+        sequencer::Sequencer,
     },
 };
 

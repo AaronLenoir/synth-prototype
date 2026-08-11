@@ -1,12 +1,11 @@
 use std::sync::mpsc::Sender;
 
 use crate::{
-    config::{clip_config::ClipConfig, config::Config, config_error::ConfigError, instrument_config::InstrumentConfigError, pattern_config::PatternConfig, rack_builder::RackBuilderError}, core::{commands::RackCommand, rack::{Rack, RackError}}, sequencer::{clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange},
+    config::{clip_config::ClipConfig, config::Config, config_error::ConfigError, instrument_config::InstrumentConfigError,}, core::{commands::RackCommand, rack::{Rack, RackError}}, sequencer::{clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange},
 };
 
 #[derive(Debug)]
 pub enum SequencerBuilderError {
-    Unknown,
     RackError(RackError),
     InstrumentConfigError(InstrumentConfigError),
     ConfigError(ConfigError),
@@ -80,14 +79,9 @@ impl SequencerBuilder {
 mod sequencer_builder_tests {
     use std::sync::mpsc::{self, Receiver};
 
-use crate::config::{meter_config::MeterConfig, rack_builder::RackBuilder, sequencer_config::SequencerConfig};
+    use crate::config::{rack_builder::RackBuilder,};
 
-    fn get_sender() -> Sender<RackCommand> {
-        let (sx, _): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
-        sx
-    }
-
-use super::*;
+    use super::*;
 
     #[test]
     fn from_config_builds_sequencer_with_tempo() {

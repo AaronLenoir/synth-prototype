@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, io::Error, sync::mpsc::Receiver};
+use std::{collections::HashMap, sync::mpsc::Receiver};
 
 use rtrb::{Consumer, Producer, RingBuffer};
 use slotmap::{SlotMap, new_key_type};
@@ -6,7 +6,6 @@ use slotmap::{SlotMap, new_key_type};
 use crate::{
     config::{
         config::Config,
-        config_error::ConfigError,
         rack_builder::{RackBuilder, RackBuilderError},
     },
     core::{

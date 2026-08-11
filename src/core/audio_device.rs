@@ -1,11 +1,10 @@
 use cpal::{
-    Device, Host, Stream, SupportedStreamConfig,
+    Device, Stream, SupportedStreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
 };
 use rtrb::Consumer;
 
 pub struct AudioDevice {
-    host: Host,
     device: Device,
     config: SupportedStreamConfig,
     channels: usize,
@@ -26,7 +25,6 @@ impl AudioDevice {
         let channels = config.channels() as usize;
 
         Self {
-            host: cpal::default_host(),
             device: device,
             config: config,
             channels: channels,

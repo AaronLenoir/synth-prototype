@@ -24,7 +24,7 @@ endpoints = [
 ]
 
 [sequencer]
-tempo=240
+tempo=120
 meter={ numerator = 3, denominator = 4 }
 
 [[sequencer.clips]]

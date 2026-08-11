@@ -2,7 +2,6 @@ use serde::Deserialize;
 
 use crate::{
     config::{musical_position::MusicalPosition, pattern_config::PatternConfig},
-    sequencer::timeline_position::TimelinePosition,
 };
 
 #[derive(Deserialize, PartialEq, Debug)]

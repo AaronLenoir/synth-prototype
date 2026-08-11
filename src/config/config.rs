@@ -2,8 +2,8 @@ use std::fs;
 
 use crate::config::{
     config_error::{ConfigError::{self, TomlError}, LoadConfigError}, connection_config::{
-        ConnectionConfig, EndPointConfig, EndPointConfigTuple, EndPointConfigTuples,
-    }, instrument_config::InstrumentConfig, meter_config::MeterConfig, rack_config::RackConfig, sequencer_config::SequencerConfig,
+        ConnectionConfig, EndPointConfigTuples,
+    }, instrument_config::InstrumentConfig, rack_config::RackConfig, sequencer_config::SequencerConfig,
 };
 use serde::Deserialize;
 
@@ -62,12 +62,8 @@ impl Config {
 mod config_tests {
     use std::collections::HashMap;
 
-    use slotmap::new_key_type;
-
     use crate::config::{
-        clip_config::ClipConfig, connection_config::EndPointConfig,
-        musical_position::MusicalPosition, pattern_config::PatternConfig,
-        signal_source_parameters::SignalSourceParameters,
+        clip_config::ClipConfig, connection_config::EndPointConfig, meter_config::MeterConfig, musical_position::MusicalPosition, pattern_config::PatternConfig, signal_source_parameters::SignalSourceParameters,
     };
 
     use super::*;
