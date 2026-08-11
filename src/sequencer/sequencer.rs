@@ -1,8 +1,7 @@
 use std::sync::mpsc::Sender;
 
 use crate::{
-    core::commands::RackCommand,
-    sequencer::{
+    config::{config::Config, sequencer_builder::{SequencerBuilder, SequencerBuilderError}}, core::{commands::RackCommand, rack::Rack}, sequencer::{
         clip::Clip, meter::Meter, sequencer_error::SequencerError,
         timeline_position::TimelinePosition, timeline_range::TimelineRange,
     },
@@ -15,7 +14,7 @@ pub struct Sequencer {
     // The meter (metre) of the score
     pub meter: Meter,
 
-    clips: Vec<Clip>,
+    pub clips: Vec<Clip>,
 
     sender: Sender<RackCommand>,
 
@@ -34,6 +33,16 @@ impl Sequencer {
             playing: false,
             position: 0.0,
         }
+    }
+
+    pub fn from_config(
+        command_sender: Sender<RackCommand>,
+        config: &Config,
+        rack: &Rack,
+    ) -> Result<Sequencer, SequencerBuilderError> {
+        let sequencer = SequencerBuilder::from_config(command_sender, &config, rack)?;
+
+        Ok(sequencer)
     }
 
     pub fn update(&mut self, time_window: u128, sample_count: u32) -> Result<(), SequencerError> {

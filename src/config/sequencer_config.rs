@@ -6,5 +6,6 @@ use crate::config::{clip_config::ClipConfig, meter_config::MeterConfig};
 pub struct SequencerConfig {
     pub tempo: u32,
     pub meter: MeterConfig,
+    #[serde(default)]
     pub clips: Vec<ClipConfig>,
 }

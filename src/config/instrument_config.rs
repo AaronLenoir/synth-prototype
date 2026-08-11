@@ -25,6 +25,7 @@ pub enum InstrumentConfig {
 
 impl InstrumentConfig {
     pub fn name(&self) -> &String {
+        // Note: for each instrument we need to add this line, seems redundant, should be improved at some point
         match self {
             InstrumentConfig::Mixer { name } => name,
             InstrumentConfig::SignalSource { name, .. } => name,
@@ -32,8 +33,10 @@ impl InstrumentConfig {
     }
 
     fn map_parameter_id(&self, parameter_name: &str) -> Result<ParameterId, InstrumentConfigError> {
+        // Note: for each instrument we need to know how to map the parameter to the appropriate ParemeterId
         match self {
             InstrumentConfig::Mixer { name: _ } => {
+                // The mixer (currently) has no known parameters
                 Err(InstrumentConfigError::UnknownParameter(parameter_name.to_string()))
             },
             InstrumentConfig::SignalSource { name: _, parameters: _ } => {
@@ -43,11 +46,13 @@ impl InstrumentConfig {
                     _ => Err(InstrumentConfigError::UnknownParameter(parameter_name.to_string()))
                 }
             }
-
         }
     }
 
     pub fn build_command(&self, name: &str, parameters: &HashMap<String, toml::Value>) -> Result<InstrumentCommand, InstrumentConfigError> {
+        if parameters.len() == 0 {
+            return Ok(InstrumentCommand::Nop());
+        }
         match name {
             "set" => {
                 let parameter = parameters["parameter"]
@@ -64,3 +69,5 @@ impl InstrumentConfig {
         }
     }
 }
+
+// TODO: Test the logic for InstrumentConfig

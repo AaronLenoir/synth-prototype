@@ -129,13 +129,15 @@ impl RackBuilder {
 }
 
 #[cfg(test)]
-mod input_port_tests {
+mod rack_builder_tests {
     use std::{
         collections::HashMap,
         sync::mpsc::{self, Sender},
     };
 
-    use crate::{
+    use serde::de::Unexpected::Seq;
+
+use crate::{
         config::{
             connection_config::{ConnectionConfig, EndPointConfig},
             signal_source_parameters::SignalSourceParameters,
@@ -152,7 +154,7 @@ mod input_port_tests {
 
     #[test]
     fn from_config_builds_rack_with_bitrate() {
-        let config = Config::new(RackConfig { bitrate: 48000 });
+        let config = Config::new(RackConfig { bitrate: 48000 }, None);
 
         let rack = RackBuilder::from_config(get_receiver(), &config).unwrap();
 
@@ -161,7 +163,7 @@ mod input_port_tests {
 
     #[test]
     fn from_config_builds_rack_with_instruments() {
-        let mut config = Config::new(RackConfig { bitrate: 48000 });
+        let mut config = Config::new(RackConfig { bitrate: 48000 }, None);
         config.instruments = vec![InstrumentConfig::Mixer {
             name: "mixer".to_string(),
         }];
@@ -175,7 +177,7 @@ mod input_port_tests {
 
     #[test]
     fn from_config_builds_connection() {
-        let mut config = Config::new(RackConfig { bitrate: 48000 });
+        let mut config = Config::new(RackConfig { bitrate: 48000 }, None);
         config.instruments = vec![
             InstrumentConfig::Mixer {
                 name: "mixer1".to_string(),

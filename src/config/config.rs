@@ -1,12 +1,9 @@
+use std::fs;
+
 use crate::config::{
-    config_error::ConfigError::{self, TomlError},
-    connection_config::{
+    config_error::{ConfigError::{self, TomlError}, LoadConfigError}, connection_config::{
         ConnectionConfig, EndPointConfig, EndPointConfigTuple, EndPointConfigTuples,
-    },
-    instrument_config::InstrumentConfig,
-    meter_config::MeterConfig,
-    rack_config::RackConfig,
-    sequencer_config::SequencerConfig,
+    }, instrument_config::InstrumentConfig, meter_config::MeterConfig, rack_config::RackConfig, sequencer_config::SequencerConfig,
 };
 use serde::Deserialize;
 
@@ -24,21 +21,22 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(rack: RackConfig) -> Config {
+    pub fn new(rack: RackConfig, sequencer: Option<SequencerConfig>) -> Config {
         Config {
             rack: rack,
             instruments: vec![],
             connection_tuples: EndPointConfigTuples { endpoints: vec![] },
             connections: vec![],
-            sequencer: SequencerConfig {
-                tempo: 120,
-                meter: MeterConfig {
-                    numerator: 4,
-                    denominator: 4,
-                },
-                clips: vec![],
-            },
+            sequencer: sequencer.unwrap_or_default(),
         }
+    }
+
+    pub fn from_file(path: String) -> Result<Config, LoadConfigError> {
+        let contents =
+        fs::read_to_string(path).map_err(|e| LoadConfigError::Io(e))?;
+        let config = Config::from_str(&contents).map_err(|e| LoadConfigError::Config(e))?;
+
+        Ok(config)
     }
 
     pub fn from_str(s: &str) -> Result<Config, ConfigError> {

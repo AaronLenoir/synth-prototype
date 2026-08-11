@@ -30,8 +30,6 @@ pub enum RackError {
 
 #[derive(Debug)]
 pub enum LoadRackError {
-    Io(std::io::Error),
-    Config(ConfigError),
     RackBuilder(RackBuilderError),
 }
 
@@ -79,16 +77,11 @@ impl Rack {
         }
     }
 
-    pub fn from_config_file(
+    pub fn from_config(
         command_receiver: Receiver<RackCommand>,
-        path: String,
-    ) -> Result<Rack, LoadRackError> {
-        let contents =
-            fs::read_to_string("test_files/two_sines.toml").map_err(|e| LoadRackError::Io(e))?;
-        let config = Config::from_str(&contents).map_err(|e| LoadRackError::Config(e))?;
-
-        let mut rack = RackBuilder::from_config(command_receiver, &config)
-            .map_err(|e| LoadRackError::RackBuilder(e))?;
+        config: &Config,
+    ) -> Result<Rack, RackBuilderError> {
+        let rack = RackBuilder::from_config(command_receiver, &config)?;
 
         Ok(rack)
     }

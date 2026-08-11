@@ -29,15 +29,17 @@ impl SequencerBuilder {
             command_sender,
         );
 
-        Self::create_clips(&mut sequencer, config, rack);
+        Self::create_clips(&mut sequencer, config, rack)?;
 
         Ok(sequencer)
     }
 
-    fn create_clips(sequencer: &mut Sequencer, config: &Config, rack: &Rack) {
+    fn create_clips(sequencer: &mut Sequencer, config: &Config, rack: &Rack) -> Result<(), SequencerBuilderError> {
         for clip in config.sequencer.clips.iter() {
-            Self::create_clip(sequencer, config, clip, rack);
+            Self::create_clip(sequencer, config, clip, rack)?;
         }
+
+        Ok(())
     }
 
     fn create_clip(sequencer: &mut Sequencer, config: &Config, clip_config: &ClipConfig, rack: &Rack) -> Result<(), SequencerBuilderError> {
@@ -74,4 +76,82 @@ impl SequencerBuilder {
     }
 }
 
-// TODO: Unit Test the Builder
+#[cfg(test)]
+mod sequencer_builder_tests {
+    use std::sync::mpsc::{self, Receiver};
+
+use crate::config::{meter_config::MeterConfig, rack_builder::RackBuilder, sequencer_config::SequencerConfig};
+
+    fn get_sender() -> Sender<RackCommand> {
+        let (sx, _): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
+        sx
+    }
+
+use super::*;
+
+    #[test]
+    fn from_config_builds_sequencer_with_tempo() {
+        let (sx, rx): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
+        let config = Config::from_str(
+            r#"
+        [rack]
+        bitrate = 48000
+
+        [sequencer]
+        tempo=120
+        meter={ numerator = 4, denominator = 4 }
+        "#,
+        )
+        .unwrap();
+
+        let sequencer = SequencerBuilder::from_config(sx, &config, &Rack::new(rx, 48000)).unwrap();
+
+        assert_eq!(sequencer.tempo, 120);
+        assert_eq!(sequencer.meter.numerator, 4);
+        assert_eq!(sequencer.meter.denominator, 4);
+    }
+
+
+    #[test]
+    fn from_config_builds_sequencer_with_clips() {
+        let (sx, rx): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
+        let config = Config::from_str(
+        r#"
+        [rack]
+        bitrate = 48000
+
+        [[instruments]]
+        type="SignalSource"
+        name="signal1"
+
+        [instruments.parameters]
+        frequency=200
+
+        [sequencer]
+        tempo=120
+        meter={ numerator = 4, denominator = 4 }
+
+        [[sequencer.clips]]
+        start={ bar = 1, beat = 1, offset = 0.0 }
+        end={ bar = 2, beat = 1, offset = 0.0 } 
+        target = "signal1"
+
+        [sequencer.clips.pattern]
+        period = 1
+        command = "set"
+
+        events = [
+            { parameter = "frequency", value = 500.0 },
+            { parameter = "frequency", value = 300.0 },
+        ]
+        "#,
+        )
+        .unwrap();
+
+        let rack = RackBuilder::from_config(rx, &config).unwrap();
+        let sequencer = SequencerBuilder::from_config(sx, &config, &rack).unwrap();
+
+        assert_eq!(sequencer.clips.len(), 1);
+    }
+
+}
