@@ -1,4 +1,4 @@
-use crate::core::instrument_ports::PortId;
+use crate::core::instrument::instrument_ports::PortId;
 
 #[derive(Debug)]
 pub struct EndPoint {

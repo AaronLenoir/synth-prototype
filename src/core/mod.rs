@@ -1,11 +1,6 @@
 pub mod audio_device;
 pub mod commands;
-pub mod connection;
-pub mod connection_order;
 pub mod instrument;
-pub mod instrument_error;
-pub mod instrument_info;
-pub mod instrument_ports;
 pub mod port;
 pub mod rack;
 pub mod update_loop;

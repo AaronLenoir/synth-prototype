@@ -1,6 +1,6 @@
 use std::sync::mpsc::Sender;
 
-use crate::{config::{builder::sequencer_builder::{SequencerBuilder, SequencerBuilderError}, config::Config}, core::{commands::RackCommand, rack::Rack}, sequencer::{clip::Clip, meter::Meter, sequencer_error::SequencerError, timeline_position::TimelinePosition, timeline_range::TimelineRange}};
+use crate::{config::{builder::sequencer_builder::{SequencerBuilder, SequencerBuilderError}, config::Config}, core::{commands::RackCommand, rack::rack::Rack,}, sequencer::{clip::Clip, meter::Meter, sequencer_error::SequencerError, timeline_position::TimelinePosition, timeline_range::TimelineRange}};
 
 pub struct Sequencer {
     /// In BPM (beats per minute)
@@ -96,16 +96,7 @@ mod clip_tests {
 
     use slotmap::SlotMap;
 
-    use crate::{
-        core::{
-            commands::{InstrumentCommand, ParameterId, RackCommand},
-            rack::InstrumentId,
-        },
-        sequencer::{
-            clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer,
-            sequencer_error::SequencerError, timeline_range::TimelineRange,
-        },
-    };
+use crate::{core::{commands::{InstrumentCommand, ParameterId, RackCommand}, rack::rack::InstrumentId}, sequencer::{clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange}};
 
     fn get_sut(sender: Sender<RackCommand>) -> Sequencer {
         let mut sequencer = Sequencer::new(

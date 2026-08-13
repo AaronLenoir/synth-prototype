@@ -1,9 +1,4 @@
-use crate::core::{
-    commands::InstrumentCommand,
-    instrument_error::InstrumentError,
-    instrument_info::InstrumentInfo,
-    instrument_ports::{InstrumentPorts, PortResolver},
-};
+use crate::core::{commands::InstrumentCommand, instrument::{instrument_error::InstrumentError, instrument_info::InstrumentInfo, instrument_ports::{InstrumentPorts, PortResolver}}};
 
 pub trait Instrument: PortResolver {
     fn info(&self) -> &InstrumentInfo;

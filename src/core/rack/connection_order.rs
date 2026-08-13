@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-use crate::core::connection::Connection;
 use topo_sort::{SortResults, TopoSort};
+
+use crate::core::rack::connection::Connection;
 
 pub struct ConnectionOrder {
     pub instruments: Vec<String>,
@@ -60,8 +61,9 @@ impl ConnectionOrder {
 
 #[cfg(test)]
 mod connection_order_tests {
-    use super::*;
-    use crate::core::connection::EndPoint;
+    use crate::core::rack::connection::EndPoint;
+
+use super::*;
 
     #[test]
     fn connection_order_orders_two_dependent_instruments() {

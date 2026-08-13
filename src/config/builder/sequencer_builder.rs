@@ -1,6 +1,6 @@
 use std::sync::mpsc::Sender;
 
-use crate::{config::{config::Config, config_error::ConfigError, instrument::instrument_config::InstrumentConfigError, sequencer::clip_config::ClipConfig}, core::{commands::RackCommand, rack::{Rack, RackError}}, sequencer::{clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange}};
+use crate::{config::{config::Config, config_error::ConfigError, instrument::instrument_config::InstrumentConfigError, sequencer::clip_config::ClipConfig}, core::{commands::RackCommand, rack::rack::{Rack, RackError},}, sequencer::{clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange}};
 
 #[derive(Debug)]
 pub enum SequencerBuilderError {

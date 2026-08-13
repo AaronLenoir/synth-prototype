@@ -1,9 +1,5 @@
 use crate::core::{
-    commands::{InstrumentCommand, ParameterId},
-    instrument::Instrument,
-    instrument_error::InstrumentError,
-    instrument_info::InstrumentInfo,
-    instrument_ports::{InstrumentPorts, PortId, PortResolver},
+    commands::{InstrumentCommand, ParameterId}, instrument::{instrument::Instrument, instrument_error::InstrumentError, instrument_info::InstrumentInfo, instrument_ports::{InstrumentPorts, PortId, PortResolver}},
 };
 
 pub const TABLE_SIZE: usize = 100;

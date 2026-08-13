@@ -3,19 +3,9 @@ use std::{
 };
 
 use crate::{
-    config::{config::Config},
-    core::{
-        commands::{
-            RackCommand::{self},
-        },
-        rack::{Rack},
-        update_loop::{UpdateLoop, UpdateLoopError},
-        update_loop_app::DefaultApp,
-        update_loop_config::UpdateLoopConfig,
-    },
-    sequencer::{
-        sequencer::Sequencer,
-    },
+    config::config::Config, core::{
+        commands::RackCommand::{self}, rack::rack::Rack, update_loop::{UpdateLoop, UpdateLoopError}, update_loop_app::DefaultApp, update_loop_config::UpdateLoopConfig,
+    }, sequencer::sequencer::Sequencer,
 };
 
 mod config;
