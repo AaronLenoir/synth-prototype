@@ -1,8 +1,6 @@
 use std::sync::mpsc::Sender;
 
-use crate::{
-    config::{clip_config::ClipConfig, config::Config, config_error::ConfigError, instrument_config::InstrumentConfigError,}, core::{commands::RackCommand, rack::{Rack, RackError}}, sequencer::{clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange},
-};
+use crate::{config::{config::Config, config_error::ConfigError, instrument::instrument_config::InstrumentConfigError, sequencer::clip_config::ClipConfig}, core::{commands::RackCommand, rack::{Rack, RackError}}, sequencer::{clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange}};
 
 #[derive(Debug)]
 pub enum SequencerBuilderError {
@@ -79,9 +77,9 @@ impl SequencerBuilder {
 mod sequencer_builder_tests {
     use std::sync::mpsc::{self, Receiver};
 
-    use crate::config::{rack_builder::RackBuilder,};
+    use crate::config::builder::rack_builder::RackBuilder;
 
-    use super::*;
+use super::*;
 
     #[test]
     fn from_config_builds_sequencer_with_tempo() {

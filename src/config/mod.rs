@@ -1,13 +1,6 @@
-pub mod clip_config;
+pub mod builder;
 pub mod config;
 pub mod config_error;
-pub mod connection_config;
-pub mod instrument_config;
-pub mod meter_config;
-pub mod musical_position;
-pub mod pattern_config;
-pub mod rack_builder;
-pub mod rack_config;
-pub mod sequencer_builder;
-pub mod sequencer_config;
-pub mod signal_source_parameters;
+pub mod instrument;
+pub mod sequencer;
+pub mod rack;

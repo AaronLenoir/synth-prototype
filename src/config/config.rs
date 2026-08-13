@@ -1,9 +1,7 @@
 use std::fs;
 
 use crate::config::{
-    config_error::{ConfigError::{self, TomlError}, LoadConfigError}, connection_config::{
-        ConnectionConfig, EndPointConfigTuples,
-    }, instrument_config::InstrumentConfig, rack_config::RackConfig, sequencer_config::SequencerConfig,
+    config_error::{ConfigError::{self, TomlError}, LoadConfigError}, instrument::instrument_config::InstrumentConfig, rack::{connection_config::{ConnectionConfig, EndPointConfigTuples}, rack_config::RackConfig}, sequencer::sequencer_config::SequencerConfig,
 };
 use serde::Deserialize;
 
@@ -62,11 +60,9 @@ impl Config {
 mod config_tests {
     use std::collections::HashMap;
 
-    use crate::config::{
-        clip_config::ClipConfig, connection_config::EndPointConfig, meter_config::MeterConfig, musical_position::MusicalPosition, pattern_config::PatternConfig, signal_source_parameters::SignalSourceParameters,
-    };
+    use crate::config::{instrument::signal_source_parameters::SignalSourceParameters, rack::{connection_config::EndPointConfig, rack_config::RackConfig}, sequencer::{clip_config::ClipConfig, meter_config::MeterConfig, musical_position::MusicalPosition, pattern_config::PatternConfig}};
 
-    use super::*;
+use super::*;
 
     fn params(entries: &[(&str, toml::Value)]) -> HashMap<String, toml::Value> {
         entries

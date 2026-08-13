@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-use crate::{config::signal_source_parameters::{self}, core::commands::{InstrumentCommand, ParameterId}, instruments::signal_source::SignalSourceParameters};
+use crate::{config::instrument::signal_source_parameters, core::commands::{InstrumentCommand, ParameterId}, instruments::signal_source::SignalSourceParameters};
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub enum InstrumentConfigError {

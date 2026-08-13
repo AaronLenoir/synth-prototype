@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::config::{clip_config::ClipConfig, meter_config::MeterConfig};
+use crate::config::sequencer::{clip_config::ClipConfig, meter_config::MeterConfig};
 
 #[derive(Deserialize, PartialEq, Debug, Default)]
 pub struct SequencerConfig {

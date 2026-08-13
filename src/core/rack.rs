@@ -3,18 +3,7 @@ use std::{collections::HashMap, sync::mpsc::Receiver};
 use rtrb::{Consumer, Producer, RingBuffer};
 use slotmap::{SlotMap, new_key_type};
 
-use crate::{
-    config::{
-        config::Config,
-        rack_builder::{RackBuilder, RackBuilderError},
-    },
-    core::{
-        audio_device::AudioDevice, commands::RackCommand, connection::Connection,
-        connection_order::ConnectionOrder, instrument::Instrument,
-        instrument_error::InstrumentError, port::PortError,
-    },
-    instruments::audio_out::AudioOut,
-};
+use crate::{config::{builder::rack_builder::{RackBuilder, RackBuilderError}, config::Config}, core::{audio_device::AudioDevice, commands::RackCommand, connection::Connection, connection_order::ConnectionOrder, instrument::Instrument, instrument_error::InstrumentError, port::PortError}, instruments::audio_out::AudioOut};
 
 #[derive(Debug)]
 pub enum RackError {

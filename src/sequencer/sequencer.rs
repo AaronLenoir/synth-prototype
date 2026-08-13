@@ -1,11 +1,6 @@
 use std::sync::mpsc::Sender;
 
-use crate::{
-    config::{config::Config, sequencer_builder::{SequencerBuilder, SequencerBuilderError}}, core::{commands::RackCommand, rack::Rack}, sequencer::{
-        clip::Clip, meter::Meter, sequencer_error::SequencerError,
-        timeline_position::TimelinePosition, timeline_range::TimelineRange,
-    },
-};
+use crate::{config::{builder::sequencer_builder::{SequencerBuilder, SequencerBuilderError}, config::Config}, core::{commands::RackCommand, rack::Rack}, sequencer::{clip::Clip, meter::Meter, sequencer_error::SequencerError, timeline_position::TimelinePosition, timeline_range::TimelineRange}};
 
 pub struct Sequencer {
     /// In BPM (beats per minute)

@@ -1,19 +1,6 @@
 use std::sync::mpsc::Receiver;
 
-use crate::{
-    config::{
-        config::Config,
-        connection_config::{ConnectionConfig, EndPointConfig},
-        instrument_config::InstrumentConfig::{self},
-    },
-    core::{
-        commands::RackCommand,
-        connection::{Connection, EndPoint},
-        instrument_ports::PortId,
-        rack::{Rack, RackError},
-    },
-    instruments::{mixer::Mixer, signal_source::SignalSource},
-};
+use crate::{config::{config::Config, instrument::instrument_config::InstrumentConfig, rack::connection_config::{ConnectionConfig, EndPointConfig}}, core::{commands::RackCommand, connection::{Connection, EndPoint}, instrument_ports::PortId, rack::{Rack, RackError}}, instruments::{mixer::Mixer, signal_source::SignalSource}};
 
 #[derive(Debug)]
 pub enum RackBuilderError {
@@ -132,9 +119,7 @@ mod rack_builder_tests {
     };
 
 use crate::{
-        config::{
-            connection_config::{ConnectionConfig, EndPointConfig}, rack_config::RackConfig,
-        }, instruments::mixer::{MixerInPorts, MixerOutPorts},
+        config::rack::rack_config::RackConfig, instruments::mixer::{MixerInPorts, MixerOutPorts},
     };
 
     use super::*;
