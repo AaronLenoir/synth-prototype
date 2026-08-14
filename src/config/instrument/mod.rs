@@ -1,2 +1,2 @@
 pub mod instrument_config;
-pub mod signal_source_parameters;
+pub mod instrument_parameters;

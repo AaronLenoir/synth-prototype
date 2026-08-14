@@ -3,9 +3,7 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 use crate::{
-    config::instrument::signal_source_parameters,
-    core::commands::{InstrumentCommand, ParameterId},
-    instruments::signal_source::SignalSourceParameters,
+    config::instrument::instrument_parameters, core::commands::{InstrumentCommand, ParameterId}, instruments::{raw_source::raw_source::{RawSource, RawSourceParameters}, signal_source::SignalSourceParameters},
 };
 
 #[derive(Debug, PartialEq, Deserialize)]
@@ -23,8 +21,12 @@ pub enum InstrumentConfig {
     },
     SignalSource {
         name: String,
-        parameters: signal_source_parameters::SignalSourceParameters,
+        parameters: instrument_parameters::SignalSourceParameters,
     },
+    RawSource {
+        name: String,
+        parameters: instrument_parameters::RawSourceParameters,
+    }
 }
 
 impl InstrumentConfig {
@@ -33,6 +35,7 @@ impl InstrumentConfig {
         match self {
             InstrumentConfig::Mixer { name } => name,
             InstrumentConfig::SignalSource { name, .. } => name,
+            InstrumentConfig::RawSource { name, .. } => name,
         }
     }
 
@@ -55,6 +58,19 @@ impl InstrumentConfig {
                     parameter_name.to_string(),
                 )),
             },
+            InstrumentConfig::RawSource { 
+                name: _, 
+                parameters: _, 
+            } => match parameter_name {
+                "f" => Ok(RawSourceParameters::FREQUENCY),
+                "frequency" => Ok(RawSourceParameters::FREQUENCY),
+                "w" => Ok(RawSourceParameters::WAVEFORM),
+                "waveform" => Ok(RawSourceParameters::WAVEFORM),
+                _ => Err(InstrumentConfigError::UnknownParameter(
+                    parameter_name.to_string(),
+                )),
+            }
+
         }
     }
 

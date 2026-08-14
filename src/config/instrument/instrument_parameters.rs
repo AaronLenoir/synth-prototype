@@ -4,3 +4,9 @@ use serde::Deserialize;
 pub struct SignalSourceParameters {
     pub frequency: f32,
 }
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct RawSourceParameters {
+    pub frequency: f32,
+    pub waveform: u32,
+}
