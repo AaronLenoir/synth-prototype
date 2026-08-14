@@ -1,6 +1,11 @@
 use rtrb::{Consumer, Producer, RingBuffer};
 
-use crate::core::instrument::{instrument::Instrument, instrument_error::InstrumentError, instrument_info::InstrumentInfo, instrument_ports::{InstrumentPorts, PortId, PortResolver}};
+use crate::core::instrument::{
+    instrument::Instrument,
+    instrument_error::InstrumentError,
+    instrument_info::InstrumentInfo,
+    instrument_ports::{InstrumentPorts, PortId, PortResolver},
+};
 
 pub struct AudioOutPorts;
 

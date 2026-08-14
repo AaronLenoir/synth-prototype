@@ -1,4 +1,12 @@
-use crate::{config::instrument::instrument_config::InstrumentConfigError, core::instrument::{instrument::Instrument, instrument_error::InstrumentError, instrument_info::InstrumentInfo, instrument_ports::{InstrumentPorts, PortId, PortResolver}}};
+use crate::{
+    config::instrument::instrument_config::InstrumentConfigError,
+    core::instrument::{
+        instrument::Instrument,
+        instrument_error::InstrumentError,
+        instrument_info::InstrumentInfo,
+        instrument_ports::{InstrumentPorts, PortId, PortResolver},
+    },
+};
 
 pub struct DCGeneratorPorts;
 

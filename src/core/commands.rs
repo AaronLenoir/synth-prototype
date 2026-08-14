@@ -1,4 +1,4 @@
-use crate::core::rack::rack::InstrumentId;
+use crate::rack::rack::InstrumentId;
 
 pub enum RackCommand {
     Instrument {

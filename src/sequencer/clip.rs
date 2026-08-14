@@ -1,5 +1,7 @@
 use crate::{
-    core::{commands::InstrumentCommand, rack::rack::InstrumentId,}, sequencer::{
+    core::commands::InstrumentCommand,
+    rack::rack::InstrumentId,
+    sequencer::{
         pattern::Pattern, timeline_position::TimelinePosition, timeline_range::TimelineRange,
     },
 };

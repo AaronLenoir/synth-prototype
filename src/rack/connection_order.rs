@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use topo_sort::{SortResults, TopoSort};
 
-use crate::core::rack::connection::Connection;
+use crate::rack::connection::Connection;
 
 pub struct ConnectionOrder {
     pub instruments: Vec<String>,
@@ -15,12 +15,8 @@ impl ConnectionOrder {
         let topo_sort = Self::get_topo_sort(dependencies);
 
         match topo_sort.into_vec_nodes() {
-            SortResults::Full(nodes) => Self {
-                instruments: nodes,
-            },
-            SortResults::Partial(nodes) => Self {
-                instruments: nodes,
-            },
+            SortResults::Full(nodes) => Self { instruments: nodes },
+            SortResults::Partial(nodes) => Self { instruments: nodes },
         }
     }
 
@@ -61,9 +57,10 @@ impl ConnectionOrder {
 
 #[cfg(test)]
 mod connection_order_tests {
-    use crate::core::rack::connection::EndPoint;
 
-use super::*;
+    use crate::rack::connection::EndPoint;
+
+    use super::*;
 
     #[test]
     fn connection_order_orders_two_dependent_instruments() {

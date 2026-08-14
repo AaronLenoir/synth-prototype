@@ -1,6 +1,8 @@
 use serde::Deserialize;
 
-use crate::{config::sequencer::meter_config::MeterConfig, sequencer::timeline_position::TimelinePosition};
+use crate::{
+    config::sequencer::meter_config::MeterConfig, sequencer::timeline_position::TimelinePosition,
+};
 
 /// The position within the score expressed in bar, beat and beat offset
 #[derive(Deserialize, PartialEq, Debug, Clone, Copy)]

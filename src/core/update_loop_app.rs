@@ -1,4 +1,4 @@
-use crate::{core::rack::rack::Rack, sequencer::sequencer::Sequencer};
+use crate::{rack::rack::Rack, sequencer::sequencer::Sequencer};
 
 pub enum AppState {
     Running,
