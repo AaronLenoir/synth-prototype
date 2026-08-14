@@ -1,4 +1,12 @@
-use crate::core::{commands::{InstrumentCommand, ParameterId}, instrument::{instrument::Instrument, instrument_error::InstrumentError, instrument_info::InstrumentInfo, instrument_ports::{InstrumentPorts, PortId, PortResolver}}};
+use crate::core::{
+    commands::{InstrumentCommand, ParameterId},
+    instrument::{
+        instrument::Instrument,
+        instrument_error::InstrumentError,
+        instrument_info::InstrumentInfo,
+        instrument_ports::{InstrumentPorts, PortId, PortResolver},
+    },
+};
 
 // Define the Instrument
 pub struct RawSource {
@@ -87,7 +95,7 @@ impl Instrument for RawSource {
         match command {
             InstrumentCommand::Set(RawSourceParameters::FREQUENCY, x) => {
                 self.frequency = x;
-            },
+            }
             InstrumentCommand::Set(RawSourceParameters::WAVEFORM, x) => {
                 if x > 0.0 {
                     self.waveform = x as u32;

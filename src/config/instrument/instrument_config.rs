@@ -3,7 +3,12 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 use crate::{
-    config::instrument::instrument_parameters, core::commands::{InstrumentCommand, ParameterId}, instruments::{raw_source::raw_source::{RawSource, RawSourceParameters}, signal_source::SignalSourceParameters},
+    config::instrument::instrument_parameters,
+    core::commands::{InstrumentCommand, ParameterId},
+    instruments::{
+        raw_source::raw_source::{RawSource, RawSourceParameters},
+        signal_source::SignalSourceParameters,
+    },
 };
 
 #[derive(Debug, PartialEq, Deserialize)]
@@ -26,7 +31,7 @@ pub enum InstrumentConfig {
     RawSource {
         name: String,
         parameters: instrument_parameters::RawSourceParameters,
-    }
+    },
 }
 
 impl InstrumentConfig {
@@ -58,9 +63,9 @@ impl InstrumentConfig {
                     parameter_name.to_string(),
                 )),
             },
-            InstrumentConfig::RawSource { 
-                name: _, 
-                parameters: _, 
+            InstrumentConfig::RawSource {
+                name: _,
+                parameters: _,
             } => match parameter_name {
                 "f" => Ok(RawSourceParameters::FREQUENCY),
                 "frequency" => Ok(RawSourceParameters::FREQUENCY),
@@ -69,8 +74,7 @@ impl InstrumentConfig {
                 _ => Err(InstrumentConfigError::UnknownParameter(
                     parameter_name.to_string(),
                 )),
-            }
-
+            },
         }
     }
 

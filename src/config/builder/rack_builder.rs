@@ -5,7 +5,10 @@ use crate::{
         config::Config,
         instrument::instrument_config::InstrumentConfig,
         rack::connection_config::{ConnectionConfig, EndPointConfig},
-    }, core::{commands::RackCommand, instrument::instrument_ports::PortId}, instruments::{mixer::Mixer, raw_source::raw_source::RawSource, signal_source::SignalSource}, rack::{
+    },
+    core::{commands::RackCommand, instrument::instrument_ports::PortId},
+    instruments::{mixer::Mixer, raw_source::raw_source::RawSource, signal_source::SignalSource},
+    rack::{
         connection::{Connection, EndPoint},
         rack::{Rack, RackError},
     },
@@ -52,7 +55,7 @@ impl RackBuilder {
             InstrumentConfig::Mixer { name } => {
                 let mixer = Mixer::new(name);
                 rack.add_instrument(Box::new(mixer))
-            },
+            }
             InstrumentConfig::RawSource { name, parameters } => {
                 let raw_source = RawSource::new(name, parameters.frequency, parameters.waveform);
                 rack.add_instrument(Box::new(raw_source))
