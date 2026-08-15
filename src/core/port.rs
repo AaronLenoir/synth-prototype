@@ -98,6 +98,18 @@ impl InputPort {
             }
         }
     }
+
+    pub fn is_connected(&self) -> bool {
+        self.consumer.is_some()
+    }
+
+    pub fn read_if_connected(&mut self) -> Result<f32, PortError> {
+        if self.is_connected() {
+            self.read()
+        } else {
+            Ok(0.0)
+        }
+    }
 }
 
 #[cfg(test)]

@@ -15,7 +15,7 @@
                     "--bin=synth-prototype"
                 ]
             },
-            "args": []
+            "args": ["test_files/raw_source_frequency_mod.toml",]
         },
         {
             "name": "Debug unit tests in executable 'synth-prototype'",

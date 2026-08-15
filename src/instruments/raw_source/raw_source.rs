@@ -1,20 +1,23 @@
-use crate::core::{
-    commands::{InstrumentCommand, ParameterId},
-    instrument::{
+use std::collections::HashMap;
+
+use crate::{core::{
+    commands::{InstrumentCommand, ParameterId}, instrument::{
         instrument::Instrument,
         instrument_error::InstrumentError,
         instrument_info::InstrumentInfo,
         instrument_ports::{InstrumentPorts, PortId, PortResolver},
-    },
-};
+    }, port::PortError,
+}, instruments::raw_source::wavetables::{Waveform::{self}, WavetableLookup}};
 
 // Define the Instrument
 pub struct RawSource {
+    pub frequency: f32,
+    pub waveform: Waveform,
+
     info: InstrumentInfo,
     ports: InstrumentPorts,
 
-    pub frequency: f32,
-    pub waveform: u32,
+    wavetables: [WavetableLookup; 1],
 }
 
 // Define the Ports
@@ -24,7 +27,7 @@ impl RawSourcePorts {
     pub const OUT_LEFT: PortId = 0;
     pub const OUT_RIGHT: PortId = 1;
     // Control signal
-    pub const IN_CV: PortId = 2;
+    pub const IN_CV: PortId = 0;
 }
 
 // Define the Parameters (if any) to be used in the set command
@@ -61,8 +64,32 @@ impl RawSource {
             info: InstrumentInfo::new(name),
             ports: InstrumentPorts::new(1, 2),
             frequency: frequency,
-            waveform: waveform,
+            waveform: RawSource::map_maveform(waveform),
+            wavetables: [
+                WavetableLookup::new(Waveform::Sine),
+            ],
         }
+    }
+
+    fn map_maveform(waveform: u32) -> Waveform {
+        match waveform { 
+            1 => Waveform::Sine,
+            _ => Waveform::None,
+        }
+    }
+
+    fn next_value(&mut self, delta: f32) -> f32 {
+        match self.waveform {
+            Waveform::None => 0.0,
+            Waveform::Sine => self.wavetables[0].next_value(delta)
+        }
+    }
+
+    fn read_cv_in(&mut self) -> Result<f32, InstrumentError> {
+        let name = self.info.name().to_owned();
+        let value = self.ports.input_port_mut(RawSourcePorts::IN_CV).read_if_connected()
+                .map_err(|e| InstrumentError::from_port_error(&name, e))?;
+        Ok(value)
     }
 }
 
@@ -79,11 +106,19 @@ impl Instrument for RawSource {
 
     fn update(&mut self, time_window: u128, sample_count: u32) -> Result<(), InstrumentError> {
         for _ in 0..sample_count {
+            let mod_value = self.read_cv_in()?;
+
+            let wave_length = 1_000_000_000.0 / (self.frequency + (self.frequency * mod_value));
+            let sample_length = time_window as f32 / sample_count as f32;
+            let delta = sample_length / wave_length;
+
+            let sample = self.next_value(delta);
+
             for port in [RawSourcePorts::OUT_LEFT, RawSourcePorts::OUT_RIGHT] {
                 let name = self.info.name().to_owned();
                 let output = self.ports.output_port_mut(port);
                 output
-                    .write_if_connected(0.0)
+                    .write_if_connected(sample)
                     .map_err(|e| InstrumentError::from_port_error(&name, e))?;
             }
         }
@@ -98,7 +133,7 @@ impl Instrument for RawSource {
             }
             InstrumentCommand::Set(RawSourceParameters::WAVEFORM, x) => {
                 if x > 0.0 {
-                    self.waveform = x as u32;
+                    self.waveform = RawSource::map_maveform(x as u32);
                 }
             }
             _ => {}
