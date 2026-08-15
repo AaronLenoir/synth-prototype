@@ -47,21 +47,9 @@ impl RackBuilder {
         rack: &mut Rack,
         config: &InstrumentConfig,
     ) -> Result<(), RackBuilderError> {
-        let result = match config {
-            InstrumentConfig::SignalSource { name, parameters } => {
-                let signal_source = SignalSource::new(name, parameters.frequency);
-                rack.add_instrument(Box::new(signal_source))
-            }
-            InstrumentConfig::Mixer { name } => {
-                let mixer = Mixer::new(name);
-                rack.add_instrument(Box::new(mixer))
-            }
-            InstrumentConfig::RawSource { name, parameters } => {
-                let raw_source = RawSource::new(name, parameters.frequency, parameters.waveform);
-                rack.add_instrument(Box::new(raw_source))
-            }
-        };
-        result.map_err(|e| RackBuilderError::RackError(e))?;
+        let instrument = InstrumentConfig::create_instrument(config);
+        rack.add_instrument(instrument)
+            .map_err(|e| RackBuilderError::RackError(e))?;
 
         Ok(())
     }

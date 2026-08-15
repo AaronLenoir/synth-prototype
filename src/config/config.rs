@@ -69,7 +69,7 @@ mod config_tests {
     use std::collections::HashMap;
 
     use crate::config::{
-        instrument::signal_source_parameters::SignalSourceParameters,
+        instrument::instrument_config::SignalSourceParameters,
         rack::{connection_config::EndPointConfig, rack_config::RackConfig},
         sequencer::{
             clip_config::ClipConfig, meter_config::MeterConfig, musical_position::MusicalPosition,

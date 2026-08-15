@@ -3,19 +3,29 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 use crate::{
-    config::instrument::instrument_parameters,
-    core::commands::{InstrumentCommand, ParameterId},
+    core::{
+        commands::{InstrumentCommand, ParameterId},
+        instrument::instrument::Instrument,
+    },
     instruments::{
-        raw_source::raw_source::{RawSource, RawSourceParameters},
-        signal_source::SignalSourceParameters,
+        self,
+        mixer::Mixer,
+        raw_source::{self, raw_source::RawSource},
+        signal_source::SignalSource,
     },
 };
 
-#[derive(Debug, PartialEq, Deserialize)]
-pub enum InstrumentConfigError {
-    UnknownCommand(String),
-    MissingCommandParameter(String, String),
-    UnknownParameter(String),
+// The following code has to be extended for each new Instrument
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct SignalSourceParameters {
+    pub frequency: f32,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct RawSourceParameters {
+    pub frequency: f32,
+    pub waveform: u32,
 }
 
 #[derive(Debug, PartialEq, Deserialize)]
@@ -26,15 +36,29 @@ pub enum InstrumentConfig {
     },
     SignalSource {
         name: String,
-        parameters: instrument_parameters::SignalSourceParameters,
+        parameters: SignalSourceParameters,
     },
     RawSource {
         name: String,
-        parameters: instrument_parameters::RawSourceParameters,
+        parameters: RawSourceParameters,
     },
 }
 
 impl InstrumentConfig {
+    pub fn create_instrument(config: &InstrumentConfig) -> Box<dyn Instrument> {
+        match config {
+            InstrumentConfig::SignalSource { name, parameters } => {
+                Box::new(SignalSource::new(name, parameters.frequency))
+            }
+            InstrumentConfig::Mixer { name } => Box::new(Mixer::new(name)),
+            InstrumentConfig::RawSource { name, parameters } => Box::new(RawSource::new(
+                name,
+                parameters.frequency,
+                parameters.waveform,
+            )),
+        }
+    }
+
     pub fn name(&self) -> &String {
         // Note: for each instrument we need to add this line, seems redundant, should be improved at some point
         match self {
@@ -57,8 +81,8 @@ impl InstrumentConfig {
                 name: _,
                 parameters: _,
             } => match parameter_name {
-                "f" => Ok(SignalSourceParameters::FREQUENCY),
-                "frequency" => Ok(SignalSourceParameters::FREQUENCY),
+                "f" => Ok(instruments::signal_source::SignalSourceParameters::FREQUENCY),
+                "frequency" => Ok(instruments::signal_source::SignalSourceParameters::FREQUENCY),
                 _ => Err(InstrumentConfigError::UnknownParameter(
                     parameter_name.to_string(),
                 )),
@@ -67,17 +91,28 @@ impl InstrumentConfig {
                 name: _,
                 parameters: _,
             } => match parameter_name {
-                "f" => Ok(RawSourceParameters::FREQUENCY),
-                "frequency" => Ok(RawSourceParameters::FREQUENCY),
-                "w" => Ok(RawSourceParameters::WAVEFORM),
-                "waveform" => Ok(RawSourceParameters::WAVEFORM),
+                "f" => Ok(raw_source::raw_source::RawSourceParameters::FREQUENCY),
+                "frequency" => Ok(raw_source::raw_source::RawSourceParameters::FREQUENCY),
+                "w" => Ok(raw_source::raw_source::RawSourceParameters::WAVEFORM),
+                "waveform" => Ok(raw_source::raw_source::RawSourceParameters::WAVEFORM),
                 _ => Err(InstrumentConfigError::UnknownParameter(
                     parameter_name.to_string(),
                 )),
             },
         }
     }
+}
 
+// Below here, there's no instrument specific code
+
+#[derive(Debug, PartialEq, Deserialize)]
+pub enum InstrumentConfigError {
+    UnknownCommand(String),
+    MissingCommandParameter(String, String),
+    UnknownParameter(String),
+}
+
+impl InstrumentConfig {
     pub fn build_command(
         &self,
         name: &str,
