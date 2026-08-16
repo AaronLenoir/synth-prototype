@@ -1,4 +1,4 @@
-use std::{os::unix::process::parent_id, sync::mpsc::Receiver};
+use std::{sync::mpsc::Receiver};
 
 use crate::{
     config::{
@@ -7,7 +7,6 @@ use crate::{
         rack::connection_config::{ConnectionConfig, EndPointConfig},
     },
     core::{commands::RackCommand, instrument::instrument_ports::PortId},
-    instruments::{mixer::Mixer, raw_source::raw_source::RawSource, signal_source::SignalSource},
     rack::{
         connection::{Connection, EndPoint},
         rack::{Rack, RackError},

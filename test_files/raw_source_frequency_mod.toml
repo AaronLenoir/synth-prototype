@@ -12,14 +12,14 @@ waveform=1
 type="RawSource"
 name="LFO1"
 [instruments.parameters]
-frequency=10
+frequency=2
 waveform=1
 
 [[instruments]]
 type="RawSource"
 name="raw_source"
 [instruments.parameters]
-frequency=100
+frequency=600
 waveform=1
 
 # [source instrument, source port, target instrument, target port]

@@ -6,10 +6,11 @@ type="Mixer"
 name="mixer"
 
 [[instruments]]
-type="SignalSource"
+type="RawSource"
 name="generator1"
 [instruments.parameters]
 frequency=500
+waveform=1
 
 # [source instrument, source port, target instrument, target port]
 [connections]

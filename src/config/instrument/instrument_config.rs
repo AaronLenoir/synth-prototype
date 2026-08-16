@@ -11,16 +11,10 @@ use crate::{
         self,
         mixer::Mixer,
         raw_source::{self, raw_source::RawSource},
-        signal_source::SignalSource,
     },
 };
 
 // The following code has to be extended for each new Instrument
-
-#[derive(Debug, Deserialize, PartialEq)]
-pub struct SignalSourceParameters {
-    pub frequency: f32,
-}
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct RawSourceParameters {
@@ -34,10 +28,6 @@ pub enum InstrumentConfig {
     Mixer {
         name: String,
     },
-    SignalSource {
-        name: String,
-        parameters: SignalSourceParameters,
-    },
     RawSource {
         name: String,
         parameters: RawSourceParameters,
@@ -47,9 +37,6 @@ pub enum InstrumentConfig {
 impl InstrumentConfig {
     pub fn create_instrument(config: &InstrumentConfig) -> Box<dyn Instrument> {
         match config {
-            InstrumentConfig::SignalSource { name, parameters } => {
-                Box::new(SignalSource::new(name, parameters.frequency))
-            }
             InstrumentConfig::Mixer { name } => Box::new(Mixer::new(name)),
             InstrumentConfig::RawSource { name, parameters } => Box::new(RawSource::new(
                 name,
@@ -63,7 +50,6 @@ impl InstrumentConfig {
         // Note: for each instrument we need to add this line, seems redundant, should be improved at some point
         match self {
             InstrumentConfig::Mixer { name } => name,
-            InstrumentConfig::SignalSource { name, .. } => name,
             InstrumentConfig::RawSource { name, .. } => name,
         }
     }
@@ -77,16 +63,6 @@ impl InstrumentConfig {
                     parameter_name.to_string(),
                 ))
             }
-            InstrumentConfig::SignalSource {
-                name: _,
-                parameters: _,
-            } => match parameter_name {
-                "f" => Ok(instruments::signal_source::SignalSourceParameters::FREQUENCY),
-                "frequency" => Ok(instruments::signal_source::SignalSourceParameters::FREQUENCY),
-                _ => Err(InstrumentConfigError::UnknownParameter(
-                    parameter_name.to_string(),
-                )),
-            },
             InstrumentConfig::RawSource {
                 name: _,
                 parameters: _,
