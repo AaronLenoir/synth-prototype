@@ -3,32 +3,14 @@ bitrate=48000
 
 [[instruments]]
 type="RawSource"
-name="LFO0"
-[instruments.parameters]
-frequency=0.1
-waveform=1
-
-[[instruments]]
-type="RawSource"
-name="LFO1"
-[instruments.parameters]
-frequency=60
-waveform=2
-
-[[instruments]]
-type="RawSource"
 name="raw_source"
 [instruments.parameters]
-frequency=200
-waveform=1
+frequency=440
+waveform=2
 
 # [source instrument, source port, target instrument, target port]
 [connections]
 endpoints = [
-    # Connect LFO
-    ["LFO0", "OUT_LEFT", "LFO1", "IN_CV"],
-    ["LFO1", "OUT_LEFT", "raw_source", "IN_CV"],
-
     # MAIN AUDIO OUT
     ["raw_source", "OUT_LEFT", "__AUDIO_OUT", "IN_LEFT" ],
     ["raw_source", "OUT_RIGHT", "__AUDIO_OUT", "IN_RIGHT" ],

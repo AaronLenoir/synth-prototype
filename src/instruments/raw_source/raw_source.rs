@@ -1,13 +1,18 @@
-use std::collections::HashMap;
-
-use crate::{core::{
-    commands::{InstrumentCommand, ParameterId}, instrument::{
-        instrument::Instrument,
-        instrument_error::InstrumentError,
-        instrument_info::InstrumentInfo,
-        instrument_ports::{InstrumentPorts, PortId, PortResolver},
-    }, port::PortError,
-}, instruments::raw_source::wavetables::{Waveform::{self}, WavetableLookup}};
+use crate::{
+    core::{
+        commands::{InstrumentCommand, ParameterId},
+        instrument::{
+            instrument::Instrument,
+            instrument_error::InstrumentError,
+            instrument_info::InstrumentInfo,
+            instrument_ports::{InstrumentPorts, PortId, PortResolver},
+        },
+    },
+    instruments::raw_source::wavetables::{
+        Waveform::{self},
+        WavetableLookup,
+    },
+};
 
 // Define the Instrument
 pub struct RawSource {
@@ -17,7 +22,7 @@ pub struct RawSource {
     info: InstrumentInfo,
     ports: InstrumentPorts,
 
-    wavetables: [WavetableLookup; 1],
+    wavetables: [WavetableLookup; 2],
 }
 
 // Define the Ports
@@ -67,13 +72,15 @@ impl RawSource {
             waveform: RawSource::map_maveform(waveform),
             wavetables: [
                 WavetableLookup::new(Waveform::Sine),
+                WavetableLookup::new(Waveform::Saw),
             ],
         }
     }
 
     fn map_maveform(waveform: u32) -> Waveform {
-        match waveform { 
+        match waveform {
             1 => Waveform::Sine,
+            2 => Waveform::Saw,
             _ => Waveform::None,
         }
     }
@@ -81,14 +88,18 @@ impl RawSource {
     fn next_value(&mut self, delta: f32) -> f32 {
         match self.waveform {
             Waveform::None => 0.0,
-            Waveform::Sine => self.wavetables[0].next_value(delta)
+            Waveform::Sine => self.wavetables[0].next_value(delta),
+            Waveform::Saw => self.wavetables[1].next_value(delta),
         }
     }
 
     fn read_cv_in(&mut self) -> Result<f32, InstrumentError> {
         let name = self.info.name().to_owned();
-        let value = self.ports.input_port_mut(RawSourcePorts::IN_CV).read_if_connected()
-                .map_err(|e| InstrumentError::from_port_error(&name, e))?;
+        let value = self
+            .ports
+            .input_port_mut(RawSourcePorts::IN_CV)
+            .read_if_connected()
+            .map_err(|e| InstrumentError::from_port_error(&name, e))?;
         Ok(value)
     }
 }

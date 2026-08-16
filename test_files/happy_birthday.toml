@@ -10,7 +10,7 @@ type="RawSource"
 name="generator1"
 [instruments.parameters]
 frequency=500
-waveform=1
+waveform=2
 
 # [source instrument, source port, target instrument, target port]
 [connections]
@@ -65,4 +65,18 @@ events = [
     { parameter = "frequency", value = 523.25 },
     { parameter = "frequency", value = 587.33 },
     { parameter = "frequency", value = 523.25 },
+]
+
+[[sequencer.clips]]
+start={ bar = 1, beat = 1, offset = 0.0 }
+end={ bar = 9, beat = 2, offset = 0.0 } 
+target = "generator1"
+
+# Alternate between waveforms every 1/8 beat
+[sequencer.clips.pattern]
+period = 0.125
+command = "set"
+events = [
+    { parameter = "waveform", value = 2.0 },
+    { parameter = "waveform", value = 1.0 },
 ]
