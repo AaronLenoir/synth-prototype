@@ -12,7 +12,7 @@ waveform=1
 type="RawSource"
 name="LFO1"
 [instruments.parameters]
-frequency=60
+frequency=5
 waveform=2
 
 [[instruments]]

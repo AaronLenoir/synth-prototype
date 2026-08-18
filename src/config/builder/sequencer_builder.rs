@@ -119,7 +119,6 @@ mod sequencer_builder_tests {
         let config = Config::from_str(
             r#"
         [rack]
-        bitrate = 48000
 
         [sequencer]
         tempo=120
@@ -128,7 +127,7 @@ mod sequencer_builder_tests {
         )
         .unwrap();
 
-        let sequencer = SequencerBuilder::from_config(sx, &config, &Rack::new(rx, 48000)).unwrap();
+        let sequencer = SequencerBuilder::from_config(sx, &config, &Rack::new(rx)).unwrap();
 
         assert_eq!(sequencer.tempo, 120);
         assert_eq!(sequencer.meter.numerator, 4);
@@ -141,14 +140,14 @@ mod sequencer_builder_tests {
         let config = Config::from_str(
             r#"
         [rack]
-        bitrate = 48000
 
         [[instruments]]
-        type="SignalSource"
+        type="RawSource"
         name="signal1"
 
         [instruments.parameters]
         frequency=200
+        waveform=1
 
         [sequencer]
         tempo=120

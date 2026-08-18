@@ -2,13 +2,15 @@ use cpal::{
     Device, Stream, SupportedStreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
 };
-use rtrb::Consumer;
+use rtrb::{Consumer, Producer, RingBuffer};
 
 pub struct AudioDevice {
+    pub sample_rate: u32,
     device: Device,
     config: SupportedStreamConfig,
     channels: usize,
     stream: Option<Stream>,
+    consumers: Vec<Consumer<f32>>,
 }
 
 impl AudioDevice {
@@ -20,42 +22,62 @@ impl AudioDevice {
 
         let config = device
             .default_output_config()
-            .expect("could not create default output");
+            .expect("failed to get default output config");
 
         let channels = config.channels() as usize;
+        let sample_rate = config.sample_rate();
 
         Self {
             device: device,
             config: config,
             channels: channels,
+            sample_rate: sample_rate,
             stream: None,
+            consumers: vec![],
         }
     }
 
-    pub fn connect_consumer(&mut self, mut consumer: Consumer<f32>) {
-        let channels = self.channels;
-
-        self.stream = Some(
-            self.device
-                .build_output_stream(
-                    self.config.into(),
-                    move |output: &mut [f32], _| {
-                        for frame in output.chunks_mut(channels) {
-                            for sample in frame {
-                                let value = consumer.pop().unwrap_or(0.0);
-                                *sample = value;
-                            }
-                        }
-                    },
-                    |err| eprintln!("{err}"),
-                    None,
-                )
-                .expect("error"),
-        );
+    pub fn take_producer(&mut self) -> Producer<f32> {
+        let buffer_size = self.sample_rate as usize * 10; // 10 s buffer
+        let (producer, consumer): (Producer<f32>, Consumer<f32>) = RingBuffer::new(buffer_size);
+        self.consumers.push(consumer);
+        return producer;
     }
 
     pub fn play(&mut self) {
-        self.stream.as_mut().unwrap().play().expect("error");
-        println!("after play");
+        self.stream = Some(self.create_stream_and_play());
+    }
+
+    fn create_stream_and_play(&mut self) -> Stream {
+        let channels = self.channels;
+        let mut consumers = std::mem::take(&mut self.consumers);
+        let mut values = vec![0.0; consumers.len()];
+        let stream = self
+            .device
+            .build_output_stream(
+                self.config.into(),
+                move |output: &mut [f32], _| {
+                    for frame in output.chunks_mut(channels) {
+                        // make sure to consume all the buffers
+                        for i in 0..values.len() {
+                            values[i] = consumers[i].pop().unwrap_or(0.0);
+                        }
+
+                        let mut channel = 0;
+                        for sample in frame {
+                            if channel < consumers.len() {
+                                *sample = values[channel];
+                            }
+                            channel += 1;
+                        }
+                    }
+                },
+                |err| eprintln!("{err}"),
+                None,
+            )
+            .expect("error");
+        stream.play().expect("error");
+
+        stream
     }
 }

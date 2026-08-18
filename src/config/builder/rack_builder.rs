@@ -26,7 +26,7 @@ impl RackBuilder {
         command_receiver: Receiver<RackCommand>,
         config: &Config,
     ) -> Result<Rack, RackBuilderError> {
-        let mut rack = Rack::new(command_receiver, config.rack.bitrate);
+        let mut rack = Rack::new(command_receiver);
 
         Self::create_instruments(&mut rack, config)?;
         Self::create_connections(&mut rack, config)?;
@@ -132,17 +132,8 @@ mod rack_builder_tests {
     }
 
     #[test]
-    fn from_config_builds_rack_with_bitrate() {
-        let config = Config::new(RackConfig { bitrate: 48000 }, None);
-
-        let rack = RackBuilder::from_config(get_receiver(), &config).unwrap();
-
-        assert_eq!(rack.bitrate, 48000);
-    }
-
-    #[test]
     fn from_config_builds_rack_with_instruments() {
-        let mut config = Config::new(RackConfig { bitrate: 48000 }, None);
+        let mut config = Config::new(RackConfig {}, None);
         config.instruments = vec![InstrumentConfig::Mixer {
             name: "mixer".to_string(),
         }];
@@ -156,7 +147,7 @@ mod rack_builder_tests {
 
     #[test]
     fn from_config_builds_connection() {
-        let mut config = Config::new(RackConfig { bitrate: 48000 }, None);
+        let mut config = Config::new(RackConfig {}, None);
         config.instruments = vec![
             InstrumentConfig::Mixer {
                 name: "mixer1".to_string(),

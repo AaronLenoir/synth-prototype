@@ -36,7 +36,7 @@ fn main() {
     rack.play();
     sequencer.play();
 
-    let mut app = DefaultApp::new(rack, 48000, sequencer);
+    let mut app = DefaultApp::new(rack, sequencer);
     let update_loop = UpdateLoop::new(UpdateLoopConfig::default());
 
     match update_loop.run(&mut app) {

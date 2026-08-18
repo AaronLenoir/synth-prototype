@@ -14,7 +14,7 @@ use crate::{
         instrument::{instrument::Instrument, instrument_error::InstrumentError},
         port::PortError,
     },
-    instruments::audio_out::AudioOut,
+    instruments::audio_out::{AudioOut, AudioOutPorts},
     rack::{connection::Connection, connection_order::ConnectionOrder},
 };
 
@@ -39,6 +39,7 @@ new_key_type! {
 }
 
 const AUDIO_OUT_CHANNELS: u8 = 2;
+const AUDIO_OUT_NAME: &str = "__AUDIO_OUT";
 
 pub struct Rack {
     instruments: SlotMap<InstrumentId, Box<dyn Instrument + 'static>>,
@@ -47,24 +48,28 @@ pub struct Rack {
     connection_order: ConnectionOrder,
     audio_device: AudioDevice,
     command_receiver: Receiver<RackCommand>,
-    pub bitrate: u32,
-    pub audio_out_name: String,
+    pub sample_rate: u32,
 }
 
 impl Rack {
-    pub fn new(command_receiver: Receiver<RackCommand>, bitrate: u32) -> Self {
-        let audio_out_name = "__AUDIO_OUT";
-
-        let mut audio_out = AudioOut::new(audio_out_name, AUDIO_OUT_CHANNELS, bitrate);
-
+    pub fn new(command_receiver: Receiver<RackCommand>) -> Self {
+        let mut audio_out = AudioOut::new(AUDIO_OUT_NAME);
         let mut audio_device = AudioDevice::new();
-        audio_device.connect_consumer(audio_out.take_consumer().expect("error"));
+
+        audio_out
+            .connect_producer(audio_device.take_producer(), AudioOutPorts::IN_LEFT)
+            .expect("error");
+        audio_out
+            .connect_producer(audio_device.take_producer(), AudioOutPorts::IN_RIGHT)
+            .expect("error");
+
+        let sample_rate = audio_device.sample_rate;
 
         let mut instrument_id_map: HashMap<String, InstrumentId> = HashMap::new();
         let mut instruments: SlotMap<InstrumentId, Box<dyn Instrument + 'static>> =
             SlotMap::with_key();
         let id = instruments.insert(Box::new(audio_out));
-        instrument_id_map.insert(audio_out_name.to_string(), id);
+        instrument_id_map.insert(AUDIO_OUT_NAME.to_string(), id);
 
         Self {
             instruments: instruments,
@@ -72,9 +77,8 @@ impl Rack {
             connections: Vec::new(),
             connection_order: ConnectionOrder::new(&vec![]),
             audio_device: audio_device,
-            audio_out_name: audio_out_name.to_string(),
             command_receiver: command_receiver,
-            bitrate: bitrate,
+            sample_rate: sample_rate,
         }
     }
 
@@ -107,7 +111,7 @@ impl Rack {
     }
 
     pub fn connect(&mut self, connection: Connection) -> Result<(), RackError> {
-        let buffer_size = (self.bitrate as usize) * 2; // 2 seconds
+        let buffer_size = (self.sample_rate as usize) * 2; // 2 seconds
 
         let (source, target) = self.instrument_pair(
             &connection.source.instrument_name,
@@ -262,7 +266,7 @@ mod rack_tests {
 
     fn get_rack() -> Rack {
         let (_, rx): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
-        let rack = Rack::new(rx, 48000);
+        let rack = Rack::new(rx);
         rack
     }
 
@@ -299,7 +303,7 @@ mod rack_tests {
                 port: DCGeneratorPorts::OUT,
             },
             target: EndPoint {
-                instrument_name: rack.audio_out_name.clone(),
+                instrument_name: AUDIO_OUT_NAME.to_string(),
                 port: AudioOutPorts::IN_LEFT,
             },
         };
@@ -318,7 +322,7 @@ mod rack_tests {
             .expect("write to instrument1 failed unexpectedly");
 
         let target = rack
-            .instrument(rack.audio_out_name.clone().as_str())
+            .instrument(AUDIO_OUT_NAME)
             .expect("could not find instrument");
 
         let result_from_input = target
@@ -335,7 +339,7 @@ mod rack_tests {
     #[test]
     fn disconnect_will_disconnect_port() {
         let instrument1 = DCGenerator::new("instrumentA", 0.5);
-        let instrument2 = AudioOut::new("instrumentB", 1, 48000);
+        let instrument2 = AudioOut::new("instrumentB");
 
         let mut rack = get_rack();
 

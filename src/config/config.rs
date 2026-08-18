@@ -69,7 +69,7 @@ mod config_tests {
     use std::collections::HashMap;
 
     use crate::config::{
-        instrument::instrument_config::SignalSourceParameters,
+        instrument::instrument_config::RawSourceParameters,
         rack::{connection_config::EndPointConfig, rack_config::RackConfig},
         sequencer::{
             clip_config::ClipConfig, meter_config::MeterConfig, musical_position::MusicalPosition,
@@ -87,34 +87,21 @@ mod config_tests {
     }
 
     #[test]
-    fn from_str_parses_rack_bitrate() {
-        let sut = Config::from_str(
-            r#"
-        [rack]
-        bitrate = 48000
-        "#,
-        )
-        .unwrap();
-
-        assert_eq!(sut.rack, RackConfig { bitrate: 48_000 });
-    }
-
-    #[test]
     fn from_str_parses_instrument_config() {
         let sut = Config::from_str(
             r#"
         [rack]
-        bitrate = 48000
         
         [[instruments]]
         type="Mixer"
         name="mixer1"
 
         [[instruments]]
-        type="SignalSource"
+        type="RawSource"
         name="generator1"
         [instruments.parameters]
         frequency=1000.0
+        waveform=1
         "#,
         )
         .unwrap();
@@ -125,9 +112,12 @@ mod config_tests {
                 InstrumentConfig::Mixer {
                     name: "mixer1".to_string(),
                 },
-                InstrumentConfig::SignalSource {
+                InstrumentConfig::RawSource {
                     name: "generator1".to_string(),
-                    parameters: SignalSourceParameters { frequency: 1000.0 },
+                    parameters: RawSourceParameters {
+                        frequency: 1000.0,
+                        waveform: 1
+                    },
                 },
             ]
         );
@@ -138,17 +128,17 @@ mod config_tests {
         let sut = Config::from_str(
             r#"
         [rack]
-        bitrate = 48000
         
         [[instruments]]
         type="Mixer"
         name="mixer1"
 
         [[instruments]]
-        type="SignalSource"
+        type="RawSource"
         name="generator1"
         [instruments.parameters]
         frequency=1000.0
+        waveform=1
 
         [connections]
         endpoints = [
@@ -175,17 +165,17 @@ mod config_tests {
         let sut = Config::from_str(
             r#"
         [rack]
-        bitrate = 48000
         
         [[instruments]]
         type="Mixer"
         name="mixer1"
 
         [[instruments]]
-        type="SignalSource"
+        type="RawSource"
         name="generator1"
         [instruments.parameters]
         frequency=1000.0
+        waveform=1
 
         [connections]
         endpoints = [
@@ -215,7 +205,6 @@ mod config_tests {
         let sut = Config::from_str(
             r#"
         [rack]
-        bitrate = 48000
         
         [[instruments]]
         type="Mixer"
