@@ -30,6 +30,10 @@ impl DefaultApp {
 
 impl App for DefaultApp {
     fn update(&mut self, dt: u128) {
+        // TODO: Ask the Sequencer for all events within this period
+        // TODO: Calculate at which sample the event occurs
+        // TODO: Pass this list to the rack update who will give it to each instrument
+
         let sample_count = (dt as f32 / 1_000_000_000.0) * self.rack.sample_rate as f32;
         if let Err(err) = self.rack.update(dt, sample_count as u32) {
             eprintln!("Rack update failed: {:?}", err);

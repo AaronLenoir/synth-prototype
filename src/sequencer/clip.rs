@@ -1,8 +1,6 @@
 use crate::{
-    core::commands::InstrumentCommand,
-    rack::rack::InstrumentId,
-    sequencer::{
-        pattern::Pattern, timeline_position::TimelinePosition, timeline_range::TimelineRange,
+    core::commands::InstrumentCommand, rack::rack::InstrumentId, sequencer::{
+        event::Event, pattern::Pattern, timeline_position::TimelinePosition, timeline_range::TimelineRange,
     },
 };
 
@@ -21,7 +19,7 @@ impl Clip {
         }
     }
 
-    pub fn commands_between(&self, range: TimelineRange) -> Vec<InstrumentCommand> {
+    pub fn commands_between(&self, range: TimelineRange) -> Vec<Event> {
         let mut result = vec![];
 
         if !self.range.overlaps(&range) || self.pattern.commands.len() == 0 {
@@ -29,12 +27,12 @@ impl Clip {
             return result;
         }
 
-        let mut position: TimelinePosition = self.range.start;
+        let mut position: TimelinePosition = TimelinePosition::new(self.range.start.value);
         let mut pattern_index: usize = 0;
 
         while position < range.end && position < self.range.end {
             if range.is_in_range(position) {
-                result.push(self.pattern.commands[pattern_index]);
+                result.push(Event::new(position, self.pattern.commands[pattern_index]));
             }
 
             position += self.pattern.period;
@@ -50,9 +48,9 @@ impl Clip {
 
 #[cfg(test)]
 mod clip_tests {
-    use slotmap::SlotMap;
+use slotmap::SlotMap;
 
-    use crate::core::commands::ParameterId;
+    use crate::{core::commands::ParameterId, sequencer::duration::Duration};
 
     use super::*;
 
@@ -68,13 +66,13 @@ mod clip_tests {
             range,
             get_dummy_instrument_id(),
             Pattern {
-                period: 1.0,
+                period: Duration::new(1.0),
                 commands: vec![InstrumentCommand::Set(ParameterId(1), 100.0)],
             },
         )
     }
 
-    fn get_sut_10_commands(range: TimelineRange, period: f32) -> Clip {
+    fn get_sut_10_commands(range: TimelineRange, period: Duration) -> Clip {
         let mut dummy_instruments: SlotMap<InstrumentId, bool> = SlotMap::with_key();
         let dummy_instrument_id = dummy_instruments.insert(true);
 
@@ -102,14 +100,14 @@ mod clip_tests {
     #[test]
     fn emits_command_when_active() {
         let sut = get_sut_single_command(TimelineRange {
-            start: 0.0,
-            end: 1.0,
+            start: TimelinePosition::new(0.0),
+            end: TimelinePosition::new(1.0),
         });
 
         // one beat
         let range = TimelineRange {
-            start: 0.0,
-            end: 1.0,
+            start: TimelinePosition::new(0.0),
+            end: TimelinePosition::new(1.0),
         };
 
         let commands = sut.commands_between(range);
@@ -120,14 +118,14 @@ mod clip_tests {
     #[test]
     fn does_not_emit_commands_when_range_before() {
         let sut = get_sut_single_command(TimelineRange {
-            start: 1.0,
-            end: 2.0,
+            start: TimelinePosition::new(1.0),
+            end: TimelinePosition::new(2.0),
         });
 
         // one beat
         let range = TimelineRange {
-            start: 0.0,
-            end: 1.0,
+            start: TimelinePosition::new(0.0),
+            end: TimelinePosition::new(1.0),
         };
 
         let commands = sut.commands_between(range);
@@ -138,14 +136,14 @@ mod clip_tests {
     #[test]
     fn does_not_emit_commands_when_range_after() {
         let sut = get_sut_single_command(TimelineRange {
-            start: 1.0,
-            end: 2.0,
+            start: TimelinePosition::new(1.0),
+            end: TimelinePosition::new(2.0),
         });
 
         // one beat
         let range = TimelineRange {
-            start: 2.0,
-            end: 3.0,
+            start: TimelinePosition::new(2.0),
+            end: TimelinePosition::new(3.0),
         };
 
         let commands = sut.commands_between(range);
@@ -157,78 +155,78 @@ mod clip_tests {
     fn respects_interval() {
         let sut = get_sut_10_commands(
             TimelineRange {
-                start: 0.0,
-                end: 10.0,
+            start: TimelinePosition::new(0.0),
+            end: TimelinePosition::new(10.0),
             },
-            0.5,
+            Duration::new(0.5),
         ); // half beat period
 
         // one beat
         let range1 = TimelineRange {
-            start: 0.0,
-            end: 1.0,
+            start: TimelinePosition::new(0.0),
+            end: TimelinePosition::new(1.0),
         };
         // from the first to second beat, we expect the two first commands
 
         let commands1 = sut.commands_between(range1);
 
         assert_eq!(2, commands1.len());
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands1[0]);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 200.0), commands1[1]);
+        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands1[0].command);
+        assert_eq!(InstrumentCommand::Set(ParameterId(1), 200.0), commands1[1].command);
 
         let range2 = TimelineRange {
-            start: 1.0,
-            end: 2.0,
+            start: TimelinePosition::new(1.0),
+            end: TimelinePosition::new(2.0),
         }; // from second to third beat, we expect the next two commands
 
         let commands2 = sut.commands_between(range2);
 
         assert_eq!(2, commands2.len());
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 300.0), commands2[0]);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 400.0), commands2[1]);
+        assert_eq!(InstrumentCommand::Set(ParameterId(1), 300.0), commands2[0].command);
+        assert_eq!(InstrumentCommand::Set(ParameterId(1), 400.0), commands2[1].command);
     }
 
     #[test]
     fn repeats_pattern() {
         let sut = get_sut_single_command(TimelineRange {
-            start: 0.0,
-            end: 10.0,
+            start: TimelinePosition::new(0.0),
+            end: TimelinePosition::new(10.0),
         });
 
         // one beat
         let range = TimelineRange {
-            start: 0.0,
-            end: 4.0,
+            start: TimelinePosition::new(0.0),
+            end: TimelinePosition::new(4.0),
         };
         // from the first to fourth beat, we expect 4 times the same command
 
         let commands = sut.commands_between(range);
 
         assert_eq!(4, commands.len());
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[0]);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[1]);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[2]);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[3]);
+        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[0].command);
+        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[1].command);
+        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[2].command);
+        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[3].command);
     }
 
     #[test]
     fn handles_empty_pattern() {
         let sut = Clip::new(
             TimelineRange {
-                start: 0.0,
-                end: 10.0,
+                start: TimelinePosition::new(0.0),
+                end: TimelinePosition::new(10.0),
             },
             get_dummy_instrument_id(),
             Pattern {
-                period: 1.0,
+                period: Duration::new(1.0),
                 commands: vec![],
             },
         );
 
         // one beat
         let range = TimelineRange {
-            start: 0.0,
-            end: 4.0,
+            start: TimelinePosition::new(0.0),
+            end: TimelinePosition::new(4.0),
         };
         // from the first to fourth beat, we expect no commands (empty pattern)
 

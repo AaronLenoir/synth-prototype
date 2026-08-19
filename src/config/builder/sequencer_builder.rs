@@ -4,12 +4,8 @@ use crate::{
     config::{
         config::Config, config_error::ConfigError,
         instrument::instrument_config::InstrumentConfigError, sequencer::clip_config::ClipConfig,
-    },
-    core::commands::RackCommand,
-    rack::rack::{Rack, RackError},
-    sequencer::{
-        clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer,
-        timeline_range::TimelineRange,
+    }, core::commands::RackCommand, rack::rack::{Rack, RackError}, sequencer::{
+        clip::Clip, duration::Duration, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange,
     },
 };
 
@@ -99,7 +95,7 @@ impl SequencerBuilder {
         }
 
         Ok(Pattern {
-            period: clip_config.pattern.period,
+            period: Duration::new(clip_config.pattern.period),
             commands: commands,
         })
     }

@@ -4,12 +4,8 @@ use crate::{
     config::{
         builder::sequencer_builder::{SequencerBuilder, SequencerBuilderError},
         config::Config,
-    },
-    core::commands::RackCommand,
-    rack::rack::Rack,
-    sequencer::{
-        clip::Clip, meter::Meter, sequencer_error::SequencerError,
-        timeline_position::TimelinePosition, timeline_range::TimelineRange,
+    }, core::commands::RackCommand, rack::rack::Rack, sequencer::{
+        clip::Clip, duration::Duration, meter::Meter, sequencer_error::SequencerError, timeline_position::TimelinePosition, timeline_range::TimelineRange,
     },
 };
 
@@ -37,7 +33,7 @@ impl Sequencer {
             clips: vec![],
             sender: sender,
             playing: false,
-            position: 0.0,
+            position: TimelinePosition::new(0.0),
         }
     }
 
@@ -60,9 +56,9 @@ impl Sequencer {
         // How many beats in a time_window?
         // time_window in nanoseconds (time_windows / 1_000_000_000) = seconds
         // bpm in minutes (bpm / 60) = beats per second
-        let step = (self.tempo as f32 / 60.0) * (time_window as f32 / 1_000_000_000.0);
+        let step = Duration::new((self.tempo as f32 / 60.0) * (time_window as f32 / 1_000_000_000.0));
 
-        self.position = self.position + step;
+        self.position += step;
 
         let mut commands: Vec<RackCommand> = vec![];
         for clip in self.clips.iter() {
@@ -74,7 +70,7 @@ impl Sequencer {
             clip_commands.iter().for_each(|c| {
                 commands.push(RackCommand::Instrument {
                     id: clip.target,
-                    command: *c,
+                    command: c.command,
                 })
             });
         }
@@ -108,11 +104,8 @@ mod clip_tests {
     use slotmap::SlotMap;
 
     use crate::{
-        core::commands::{InstrumentCommand, ParameterId, RackCommand},
-        rack::rack::InstrumentId,
-        sequencer::{
-            clip::Clip, meter::Meter, pattern::Pattern, sequencer::Sequencer,
-            timeline_range::TimelineRange,
+        core::commands::{InstrumentCommand, ParameterId, RackCommand}, rack::rack::InstrumentId, sequencer::{
+            clip::Clip, duration::Duration, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_position::TimelinePosition, timeline_range::TimelineRange,
         },
     };
 
@@ -127,8 +120,8 @@ mod clip_tests {
         );
 
         sequencer.add_clip(get_clip_single_command(TimelineRange {
-            start: 0.0,
-            end: 10.0,
+            start: TimelinePosition::new(0.0),
+            end: TimelinePosition::new(10.0),
         }));
 
         sequencer
@@ -146,7 +139,7 @@ mod clip_tests {
             range,
             get_dummy_instrument_id(),
             Pattern {
-                period: 1.0,
+                period: Duration::new(1.0),
                 commands: vec![InstrumentCommand::Set(ParameterId(1), 100.0)],
             },
         )
@@ -162,7 +155,7 @@ mod clip_tests {
         sut.update(1_000_000_000, 1000).expect("unexpected error");
 
         // One second progression at 120 bpm = 2 beats
-        assert_eq!(2.0, sut.position);
+        assert_eq!(2.0, sut.position.value);
     }
 
     #[test]

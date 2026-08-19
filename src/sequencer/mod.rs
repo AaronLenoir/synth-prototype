@@ -1,5 +1,6 @@
 pub mod clip;
 pub mod duration;
+pub mod event;
 pub mod meter;
 pub mod pattern;
 pub mod sequencer;
