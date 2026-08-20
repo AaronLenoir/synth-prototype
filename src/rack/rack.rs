@@ -16,6 +16,7 @@ use crate::{
     },
     instruments::audio_out::{AudioOut, AudioOutPorts},
     rack::{connection::Connection, connection_order::ConnectionOrder},
+    sequencer::{event::RackEvent, sample_offset::SampleOffset},
 };
 
 #[derive(Debug)]
@@ -47,12 +48,11 @@ pub struct Rack {
     connections: Vec<Connection>,
     connection_order: ConnectionOrder,
     audio_device: AudioDevice,
-    command_receiver: Receiver<RackCommand>,
     pub sample_rate: u32,
 }
 
 impl Rack {
-    pub fn new(command_receiver: Receiver<RackCommand>) -> Self {
+    pub fn new() -> Self {
         let mut audio_out = AudioOut::new(AUDIO_OUT_NAME);
         let mut audio_device = AudioDevice::new();
 
@@ -77,16 +77,12 @@ impl Rack {
             connections: Vec::new(),
             connection_order: ConnectionOrder::new(&vec![]),
             audio_device: audio_device,
-            command_receiver: command_receiver,
             sample_rate: sample_rate,
         }
     }
 
-    pub fn from_config(
-        command_receiver: Receiver<RackCommand>,
-        config: &Config,
-    ) -> Result<Rack, RackBuilderError> {
-        let rack = RackBuilder::from_config(command_receiver, &config)?;
+    pub fn from_config(config: &Config) -> Result<Rack, RackBuilderError> {
+        let rack = RackBuilder::from_config(&config)?;
 
         Ok(rack)
     }
@@ -165,7 +161,12 @@ impl Rack {
     }
 
     // update method
-    pub fn update(&mut self, time_window: u128, sample_count: u32) -> Result<(), RackError> {
+    pub fn update(
+        &mut self,
+        time_window: u128,
+        sample_count: u32,
+        events: Vec<RackEvent>,
+    ) -> Result<(), RackError> {
         for instrument_name in &self.connection_order.instruments {
             let instrument_id = self
                 .instrument_id_map
@@ -178,22 +179,33 @@ impl Rack {
                 .get_mut(instrument_id)
                 .expect("Instrument should exist");
 
+            let mut instrument_events_by_offset: HashMap<u32, Vec<&RackEvent>> = HashMap::new();
+
+            for event in events.iter() {
+                if event.command.instrument_id() == instrument_id {
+                    instrument_events_by_offset
+                        .entry(event.offset.value)
+                        .or_default()
+                        .push(event);
+                }
+            }
+
             instrument
-                .update(time_window, sample_count)
+                .update(time_window, sample_count, instrument_events_by_offset)
                 .map_err(|e| RackError::InstrumentError(e))?;
         }
 
-        while let Ok(command) = self.command_receiver.try_recv() {
-            match command {
-                RackCommand::Instrument { id, command } => {
-                    let instrument = self
-                        .instruments
-                        .get_mut(id)
-                        .expect("Instrument should exist");
-                    instrument.handle_command(command);
-                }
-            }
-        }
+        // while let Ok(command) = self.command_receiver.try_recv() {
+        //     match command {
+        //         RackCommand::Instrument { id, command } => {
+        //             let instrument = self
+        //                 .instruments
+        //                 .get_mut(id)
+        //                 .expect("Instrument should exist");
+        //             instrument.handle_command(command);
+        //         }
+        //     }
+        // }
 
         Ok(())
     }
@@ -265,8 +277,7 @@ mod rack_tests {
     use super::*;
 
     fn get_rack() -> Rack {
-        let (_, rx): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
-        let rack = Rack::new(rx);
+        let rack = Rack::new();
         rack
     }
 

@@ -1,4 +1,7 @@
-use crate::{rack::rack::Rack, sequencer::sequencer::Sequencer};
+use crate::{
+    rack::rack::Rack,
+    sequencer::{event::RackEvent, sequencer::Sequencer},
+};
 
 pub enum AppState {
     Running,
@@ -35,15 +38,25 @@ impl App for DefaultApp {
         // TODO: Pass this list to the rack update who will give it to each instrument
 
         let sample_count = (dt as f32 / 1_000_000_000.0) * self.rack.sample_rate as f32;
-        if let Err(err) = self.rack.update(dt, sample_count as u32) {
+
+        let events: Vec<RackEvent> = match self.sequencer.step(dt, sample_count as u32) {
+            Ok(events) => events,
+            Err(err) => {
+                eprintln!("Rack update failed: {:?}", err);
+                self.state = AppState::Finished;
+                return;
+            }
+        };
+
+        if let Err(err) = self.rack.update(dt, sample_count as u32, events) {
             eprintln!("Rack update failed: {:?}", err);
             self.state = AppState::Finished;
         }
 
-        if let Err(err) = self.sequencer.update(dt, sample_count as u32) {
-            eprintln!("Sequencer update failed: {:?}", err);
-            self.state = AppState::Finished;
-        }
+        // if let Err(err) = self.sequencer.update(dt, sample_count as u32) {
+        //     eprintln!("Sequencer update failed: {:?}", err);
+        //     self.state = AppState::Finished;
+        // }
     }
 
     fn render(&mut self) {

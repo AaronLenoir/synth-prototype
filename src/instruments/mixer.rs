@@ -1,10 +1,15 @@
+use std::collections::HashMap;
+
 use rtrb::{Consumer, Producer, RingBuffer};
 
-use crate::core::instrument::{
-    instrument::Instrument,
-    instrument_error::InstrumentError,
-    instrument_info::InstrumentInfo,
-    instrument_ports::{InstrumentPorts, PortId, PortResolver},
+use crate::{
+    core::instrument::{
+        instrument::Instrument,
+        instrument_error::InstrumentError,
+        instrument_info::InstrumentInfo,
+        instrument_ports::{InstrumentPorts, PortId, PortResolver},
+    },
+    sequencer::event::RackEvent,
 };
 
 pub struct MixerInPorts;
@@ -161,7 +166,12 @@ impl Instrument for Mixer {
         &mut self.ports
     }
 
-    fn update(&mut self, time_window: u128, sample_count: u32) -> Result<(), InstrumentError> {
+    fn update(
+        &mut self,
+        time_window: u128,
+        sample_count: u32,
+        events: HashMap<u32, Vec<&RackEvent>>,
+    ) -> Result<(), InstrumentError> {
         let sample_count_as_usize = sample_count as usize;
 
         let mut left_buffer = vec![0.0f32; sample_count_as_usize];

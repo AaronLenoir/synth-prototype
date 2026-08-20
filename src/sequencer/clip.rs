@@ -1,6 +1,8 @@
 use crate::{
-    core::commands::InstrumentCommand, rack::rack::InstrumentId, sequencer::{
-        event::Event, pattern::Pattern, timeline_position::TimelinePosition, timeline_range::TimelineRange,
+    rack::rack::InstrumentId,
+    sequencer::{
+        event::InstrumentEvent, pattern::Pattern, timeline_position::TimelinePosition,
+        timeline_range::TimelineRange,
     },
 };
 
@@ -19,7 +21,7 @@ impl Clip {
         }
     }
 
-    pub fn commands_between(&self, range: TimelineRange) -> Vec<Event> {
+    pub fn commands_between(&self, range: TimelineRange) -> Vec<InstrumentEvent> {
         let mut result = vec![];
 
         if !self.range.overlaps(&range) || self.pattern.commands.len() == 0 {
@@ -32,7 +34,10 @@ impl Clip {
 
         while position < range.end && position < self.range.end {
             if range.is_in_range(position) {
-                result.push(Event::new(position, self.pattern.commands[pattern_index]));
+                result.push(InstrumentEvent::new(
+                    position,
+                    self.pattern.commands[pattern_index],
+                ));
             }
 
             position += self.pattern.period;
@@ -48,9 +53,12 @@ impl Clip {
 
 #[cfg(test)]
 mod clip_tests {
-use slotmap::SlotMap;
+    use slotmap::SlotMap;
 
-    use crate::{core::commands::ParameterId, sequencer::duration::Duration};
+    use crate::{
+        core::commands::{InstrumentCommand, ParameterId},
+        sequencer::duration::Duration,
+    };
 
     use super::*;
 
@@ -155,8 +163,8 @@ use slotmap::SlotMap;
     fn respects_interval() {
         let sut = get_sut_10_commands(
             TimelineRange {
-            start: TimelinePosition::new(0.0),
-            end: TimelinePosition::new(10.0),
+                start: TimelinePosition::new(0.0),
+                end: TimelinePosition::new(10.0),
             },
             Duration::new(0.5),
         ); // half beat period
@@ -171,8 +179,14 @@ use slotmap::SlotMap;
         let commands1 = sut.commands_between(range1);
 
         assert_eq!(2, commands1.len());
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands1[0].command);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 200.0), commands1[1].command);
+        assert_eq!(
+            InstrumentCommand::Set(ParameterId(1), 100.0),
+            commands1[0].command
+        );
+        assert_eq!(
+            InstrumentCommand::Set(ParameterId(1), 200.0),
+            commands1[1].command
+        );
 
         let range2 = TimelineRange {
             start: TimelinePosition::new(1.0),
@@ -182,8 +196,14 @@ use slotmap::SlotMap;
         let commands2 = sut.commands_between(range2);
 
         assert_eq!(2, commands2.len());
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 300.0), commands2[0].command);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 400.0), commands2[1].command);
+        assert_eq!(
+            InstrumentCommand::Set(ParameterId(1), 300.0),
+            commands2[0].command
+        );
+        assert_eq!(
+            InstrumentCommand::Set(ParameterId(1), 400.0),
+            commands2[1].command
+        );
     }
 
     #[test]
@@ -203,10 +223,22 @@ use slotmap::SlotMap;
         let commands = sut.commands_between(range);
 
         assert_eq!(4, commands.len());
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[0].command);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[1].command);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[2].command);
-        assert_eq!(InstrumentCommand::Set(ParameterId(1), 100.0), commands[3].command);
+        assert_eq!(
+            InstrumentCommand::Set(ParameterId(1), 100.0),
+            commands[0].command
+        );
+        assert_eq!(
+            InstrumentCommand::Set(ParameterId(1), 100.0),
+            commands[1].command
+        );
+        assert_eq!(
+            InstrumentCommand::Set(ParameterId(1), 100.0),
+            commands[2].command
+        );
+        assert_eq!(
+            InstrumentCommand::Set(ParameterId(1), 100.0),
+            commands[3].command
+        );
     }
 
     #[test]

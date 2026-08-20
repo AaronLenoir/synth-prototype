@@ -1,12 +1,10 @@
-use std::sync::mpsc::Receiver;
-
 use crate::{
     config::{
         config::Config,
         instrument::instrument_config::InstrumentConfig,
         rack::connection_config::{ConnectionConfig, EndPointConfig},
     },
-    core::{commands::RackCommand, instrument::instrument_ports::PortId},
+    core::instrument::instrument_ports::PortId,
     rack::{
         connection::{Connection, EndPoint},
         rack::{Rack, RackError},
@@ -22,11 +20,8 @@ pub enum RackBuilderError {
 pub struct RackBuilder {}
 
 impl RackBuilder {
-    pub fn from_config(
-        command_receiver: Receiver<RackCommand>,
-        config: &Config,
-    ) -> Result<Rack, RackBuilderError> {
-        let mut rack = Rack::new(command_receiver);
+    pub fn from_config(config: &Config) -> Result<Rack, RackBuilderError> {
+        let mut rack = Rack::new();
 
         Self::create_instruments(&mut rack, config)?;
         Self::create_connections(&mut rack, config)?;
@@ -126,11 +121,6 @@ mod rack_builder_tests {
 
     use super::*;
 
-    fn get_receiver() -> Receiver<RackCommand> {
-        let (_, rx): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
-        rx
-    }
-
     #[test]
     fn from_config_builds_rack_with_instruments() {
         let mut config = Config::new(RackConfig {}, None);
@@ -138,7 +128,7 @@ mod rack_builder_tests {
             name: "mixer".to_string(),
         }];
 
-        let rack = RackBuilder::from_config(get_receiver(), &config).unwrap();
+        let rack = RackBuilder::from_config(&config).unwrap();
 
         let result = rack.instrument_id(&"mixer".to_string());
 
@@ -168,7 +158,7 @@ mod rack_builder_tests {
             },
         }];
 
-        let mut rack = RackBuilder::from_config(get_receiver(), &config).unwrap();
+        let mut rack = RackBuilder::from_config(&config).unwrap();
 
         // to check if the connection was made we try to make it again and should get an error
         let test_connection = Connection {

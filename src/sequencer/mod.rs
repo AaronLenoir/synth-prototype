@@ -3,6 +3,7 @@ pub mod duration;
 pub mod event;
 pub mod meter;
 pub mod pattern;
+pub mod sample_offset;
 pub mod sequencer;
 pub mod sequencer_error;
 pub mod timeline_position;

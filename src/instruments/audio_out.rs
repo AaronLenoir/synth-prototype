@@ -2,11 +2,14 @@ use std::collections::HashMap;
 
 use rtrb::{Consumer, Producer, RingBuffer};
 
-use crate::core::instrument::{
-    instrument::Instrument,
-    instrument_error::InstrumentError,
-    instrument_info::InstrumentInfo,
-    instrument_ports::{InstrumentPorts, PortId, PortResolver},
+use crate::{
+    core::instrument::{
+        instrument::Instrument,
+        instrument_error::InstrumentError,
+        instrument_info::InstrumentInfo,
+        instrument_ports::{InstrumentPorts, PortId, PortResolver},
+    },
+    sequencer::event::RackEvent,
 };
 
 pub struct AudioOutPorts;
@@ -73,7 +76,12 @@ impl Instrument for AudioOut {
         &mut self.ports
     }
 
-    fn update(&mut self, time_window: u128, sample_count: u32) -> Result<(), InstrumentError> {
+    fn update(
+        &mut self,
+        time_window: u128,
+        sample_count: u32,
+        events: HashMap<u32, Vec<&RackEvent>>,
+    ) -> Result<(), InstrumentError> {
         // read from the input ports, write to the internal buffer which will be read by
         // cpal's "move"
 

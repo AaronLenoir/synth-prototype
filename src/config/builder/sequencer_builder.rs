@@ -4,8 +4,12 @@ use crate::{
     config::{
         config::Config, config_error::ConfigError,
         instrument::instrument_config::InstrumentConfigError, sequencer::clip_config::ClipConfig,
-    }, core::commands::RackCommand, rack::rack::{Rack, RackError}, sequencer::{
-        clip::Clip, duration::Duration, meter::Meter, pattern::Pattern, sequencer::Sequencer, timeline_range::TimelineRange,
+    },
+    core::commands::RackCommand,
+    rack::rack::{Rack, RackError},
+    sequencer::{
+        clip::Clip, duration::Duration, meter::Meter, pattern::Pattern, sequencer::Sequencer,
+        timeline_range::TimelineRange,
     },
 };
 
@@ -19,18 +23,13 @@ pub enum SequencerBuilderError {
 pub struct SequencerBuilder {}
 
 impl SequencerBuilder {
-    pub fn from_config(
-        command_sender: Sender<RackCommand>,
-        config: &Config,
-        rack: &Rack,
-    ) -> Result<Sequencer, SequencerBuilderError> {
+    pub fn from_config(config: &Config, rack: &Rack) -> Result<Sequencer, SequencerBuilderError> {
         let mut sequencer = Sequencer::new(
             config.sequencer.tempo,
             Meter {
                 numerator: config.sequencer.meter.numerator,
                 denominator: config.sequencer.meter.denominator,
             },
-            command_sender,
         );
 
         Self::create_clips(&mut sequencer, config, rack)?;
@@ -111,7 +110,6 @@ mod sequencer_builder_tests {
 
     #[test]
     fn from_config_builds_sequencer_with_tempo() {
-        let (sx, rx): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
         let config = Config::from_str(
             r#"
         [rack]
@@ -123,7 +121,7 @@ mod sequencer_builder_tests {
         )
         .unwrap();
 
-        let sequencer = SequencerBuilder::from_config(sx, &config, &Rack::new(rx)).unwrap();
+        let sequencer = SequencerBuilder::from_config(&config, &Rack::new()).unwrap();
 
         assert_eq!(sequencer.tempo, 120);
         assert_eq!(sequencer.meter.numerator, 4);
@@ -132,7 +130,6 @@ mod sequencer_builder_tests {
 
     #[test]
     fn from_config_builds_sequencer_with_clips() {
-        let (sx, rx): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
         let config = Config::from_str(
             r#"
         [rack]
@@ -166,8 +163,8 @@ mod sequencer_builder_tests {
         )
         .unwrap();
 
-        let rack = RackBuilder::from_config(rx, &config).unwrap();
-        let sequencer = SequencerBuilder::from_config(sx, &config, &rack).unwrap();
+        let rack = RackBuilder::from_config(&config).unwrap();
+        let sequencer = SequencerBuilder::from_config(&config, &rack).unwrap();
 
         assert_eq!(sequencer.clips.len(), 1);
     }

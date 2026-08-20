@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use crate::{
     core::{
-        commands::{InstrumentCommand, ParameterId},
+        commands::{InstrumentCommand, ParameterId, RackCommand},
         instrument::{
             instrument::Instrument,
             instrument_error::InstrumentError,
@@ -12,6 +14,7 @@ use crate::{
         Waveform::{self},
         WavetableLookup,
     },
+    sequencer::{event::RackEvent, sample_offset::SampleOffset},
 };
 
 // Define the Instrument
@@ -115,8 +118,15 @@ impl Instrument for RawSource {
         &mut self.ports
     }
 
-    fn update(&mut self, time_window: u128, sample_count: u32) -> Result<(), InstrumentError> {
-        for _ in 0..sample_count {
+    fn update(
+        &mut self,
+        time_window: u128,
+        sample_count: u32,
+        events: HashMap<u32, Vec<&RackEvent>>,
+    ) -> Result<(), InstrumentError> {
+        for sample_offset in 0..sample_count {
+            self.handle_events_at_sample(sample_offset, &events);
+
             let mod_value = self.read_cv_in()?;
 
             let wave_length = 1_000_000_000.0 / (self.frequency + (self.frequency * mod_value));

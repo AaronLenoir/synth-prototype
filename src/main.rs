@@ -27,11 +27,9 @@ fn main() {
         panic!("Missing mandatory argument <config.toml>")
     }
 
-    let (tx, rx): (Sender<RackCommand>, Receiver<RackCommand>) = mpsc::channel();
-
     let config = Config::from_file(args[1].to_string()).unwrap();
-    let mut rack = Rack::from_config(rx, &config).unwrap();
-    let mut sequencer = Sequencer::from_config(tx, &config, &rack).unwrap();
+    let mut rack = Rack::from_config(&config).unwrap();
+    let mut sequencer = Sequencer::from_config(&config, &rack).unwrap();
 
     rack.play();
     sequencer.play();

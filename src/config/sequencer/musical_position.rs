@@ -20,7 +20,7 @@ pub struct MusicalPosition {
 impl MusicalPosition {
     pub fn into_timeline_position(self, meter: MeterConfig) -> TimelinePosition {
         TimelinePosition::new(
-            (meter.numerator * (self.bar - 1) as i32) as f32 + (self.beat - 1) as f32 + self.offset
+            (meter.numerator * (self.bar - 1) as i32) as f32 + (self.beat - 1) as f32 + self.offset,
         )
     }
 }
@@ -30,7 +30,7 @@ mod musical_position_tests {
 
     use crate::sequencer::duration::Duration;
 
-use super::*;
+    use super::*;
 
     fn get_parameters(
         numerator: i32,

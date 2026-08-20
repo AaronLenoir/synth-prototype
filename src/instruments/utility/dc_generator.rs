@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{
     config::instrument::instrument_config::InstrumentConfigError,
     core::instrument::{
@@ -6,6 +8,7 @@ use crate::{
         instrument_info::InstrumentInfo,
         instrument_ports::{InstrumentPorts, PortId, PortResolver},
     },
+    sequencer::event::RackEvent,
 };
 
 pub struct DCGeneratorPorts;
@@ -53,7 +56,12 @@ impl Instrument for DCGenerator {
         &mut self.ports
     }
 
-    fn update(&mut self, time_window: u128, sample_count: u32) -> Result<(), InstrumentError> {
+    fn update(
+        &mut self,
+        time_window: u128,
+        sample_count: u32,
+        events: HashMap<u32, Vec<&RackEvent>>,
+    ) -> Result<(), InstrumentError> {
         let value = self.value;
         let name = self.info.name().to_owned();
 
@@ -69,6 +77,8 @@ impl Instrument for DCGenerator {
 
 #[cfg(test)]
 mod dc_generator_tests {
+    use std::collections::HashMap;
+
     use super::*;
     use rtrb::{Consumer, Producer, RingBuffer};
 
@@ -83,7 +93,7 @@ mod dc_generator_tests {
             .set_producer(producer)
             .map_err(|e| InstrumentError::from_port_error("generator", e))?;
 
-        sut.update(1, 20)?;
+        sut.update(1, 20, HashMap::new())?;
 
         let chunk = consumer
             .read_chunk(20)

@@ -7,6 +7,14 @@ pub enum RackCommand {
     },
 }
 
+impl RackCommand {
+    pub fn instrument_id(&self) -> InstrumentId {
+        match self {
+            RackCommand::Instrument { id, .. } => *id,
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct ParameterId(pub u32);
 
