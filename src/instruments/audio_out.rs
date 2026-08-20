@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use rtrb::{Consumer, Producer, RingBuffer};
+use rtrb::{Producer};
 
 use crate::{
     core::instrument::{
@@ -38,6 +38,8 @@ pub enum AudioOutError {
     PortAlreadyConnected(PortId),
 }
 
+/// Instrument that moves the audio from its input ports to the Audio Device
+/// This instrument has no Output Ports
 pub struct AudioOut {
     info: InstrumentInfo,
     ports: InstrumentPorts,

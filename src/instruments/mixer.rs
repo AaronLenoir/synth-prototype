@@ -120,6 +120,7 @@ impl PortResolver for Mixer {
     }
 }
 
+/// Preliminary implementation of a 16 channel Mixer, to be extended / refined
 pub struct Mixer {
     info: InstrumentInfo,
     ports: InstrumentPorts,

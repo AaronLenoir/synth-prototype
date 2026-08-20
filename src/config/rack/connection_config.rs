@@ -35,4 +35,9 @@ pub struct EndPointConfigTuples {
     pub endpoints: Vec<EndPointConfigTuple>,
 }
 
+/// Tuple expects the following 4 values to describe a connection
+///   - Source Instrument Name
+///   - Source Port Name
+///   - Target Instrument Name
+///   - Target Port Name
 pub type EndPointConfigTuple = (String, String, String, String);

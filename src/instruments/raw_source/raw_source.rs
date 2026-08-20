@@ -14,10 +14,13 @@ use crate::{
         Waveform::{self},
         WavetableLookup,
     },
-    sequencer::{event::RackEvent, sample_offset::SampleOffset},
+    sequencer::{event::RackEvent},
 };
 
-// Define the Instrument
+/// RawSource is a signal source than can generate a continuous signal in a
+/// configurable frequency with several possible waveforms
+/// Additionally it features has a CV_IN port that can be used to mod the 
+/// frequency
 pub struct RawSource {
     pub frequency: f32,
     pub waveform: Waveform,

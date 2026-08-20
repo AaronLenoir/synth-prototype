@@ -1,11 +1,8 @@
-use std::sync::mpsc::Sender;
-
 use crate::{
     config::{
         config::Config, config_error::ConfigError,
         instrument::instrument_config::InstrumentConfigError, sequencer::clip_config::ClipConfig,
     },
-    core::commands::RackCommand,
     rack::rack::{Rack, RackError},
     sequencer::{
         clip::Clip, duration::Duration, meter::Meter, pattern::Pattern, sequencer::Sequencer,
@@ -20,6 +17,7 @@ pub enum SequencerBuilderError {
     ConfigError(ConfigError),
 }
 
+/// The SequencerBuilder can construct a Sequencer instance from a Config instance
 pub struct SequencerBuilder {}
 
 impl SequencerBuilder {
@@ -79,7 +77,7 @@ impl SequencerBuilder {
         config: &Config,
         clip_config: &ClipConfig,
     ) -> Result<Pattern, SequencerBuilderError> {
-        // get instrument type
+        // get instrument type from the configuration
         let instrument = config
             .instrument_config_by_name(&clip_config.target)
             .map_err(|e| SequencerBuilderError::ConfigError(e))?;
@@ -102,8 +100,6 @@ impl SequencerBuilder {
 
 #[cfg(test)]
 mod sequencer_builder_tests {
-    use std::sync::mpsc::{self, Receiver};
-
     use crate::config::builder::rack_builder::RackBuilder;
 
     use super::*;

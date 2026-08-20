@@ -17,6 +17,7 @@ pub enum RackBuilderError {
     RackError(RackError),
 }
 
+/// The RackBuilder can construct a Rack instance from a Config instance
 pub struct RackBuilder {}
 
 impl RackBuilder {
@@ -112,8 +113,6 @@ impl RackBuilder {
 
 #[cfg(test)]
 mod rack_builder_tests {
-    use std::sync::mpsc::{self, Sender};
-
     use crate::{
         config::rack::rack_config::RackConfig,
         instruments::mixer::{MixerInPorts, MixerOutPorts},

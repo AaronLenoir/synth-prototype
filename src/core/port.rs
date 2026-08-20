@@ -8,6 +8,10 @@ pub enum PortError {
     BufferEmpty,
 }
 
+/// The OutputPort (and InputPort) are used to connect instrument's output to the next input
+/// and are the core of how audio moves from the instruments to the final audio out
+/// Wen two ports are connected a RingBuffer is created and the OutputPort will own the Producer
+/// while the InputPort will own the Consumer
 pub struct OutputPort {
     producer: Option<Producer<f32>>,
 }

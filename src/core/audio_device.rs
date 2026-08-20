@@ -4,6 +4,9 @@ use cpal::{
 };
 use rtrb::{Consumer, Producer, RingBuffer};
 
+/// The AudioDevice owns a stream to the actual audio device
+/// it reads samples from a Consumer per channel and interleaves
+/// these while writing to the audio stream
 pub struct AudioDevice {
     pub sample_rate: u32,
     device: Device,
@@ -37,6 +40,8 @@ impl AudioDevice {
         }
     }
 
+    /// Creates a RingBuffer and returns the Producer for that RingBuffer
+    /// This function should called for each output channel
     pub fn take_producer(&mut self) -> Producer<f32> {
         let buffer_size = self.sample_rate as usize * 10; // 10 s buffer
         let (producer, consumer): (Producer<f32>, Consumer<f32>) = RingBuffer::new(buffer_size);
@@ -44,6 +49,7 @@ impl AudioDevice {
         return producer;
     }
 
+    /// Opens the audio stream and attached the closure that writes the data 
     pub fn play(&mut self) {
         self.stream = Some(self.create_stream_and_play());
     }

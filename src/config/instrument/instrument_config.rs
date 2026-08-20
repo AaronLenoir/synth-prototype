@@ -8,20 +8,27 @@ use crate::{
         instrument::instrument::Instrument,
     },
     instruments::{
-        self,
         mixer::Mixer,
         raw_source::{self, raw_source::RawSource},
     },
 };
 
-// The following code has to be extended for each new Instrument
+// ********
+// From here, there is code that must be extended for each new Instrument
+// ********
 
+/// Parameters for the RawSource instrument available in the config
+/// - frequency: in Hz (float)
+/// - waveform: 1 = sine, 2 = sawtooth (integer)
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct RawSourceParameters {
     pub frequency: f32,
     pub waveform: u32,
 }
 
+/// Maps to the [[instruments]] section(s) in the toml file, each
+/// instrument requires an entry here, the name property is mandatory
+/// any other parameters can vary per instrument
 #[derive(Debug, PartialEq, Deserialize)]
 #[serde(tag = "type")]
 pub enum InstrumentConfig {
@@ -34,7 +41,10 @@ pub enum InstrumentConfig {
     },
 }
 
+/// Instrument specific logic for InstrumentConfig
+/// This code will have to be extended for each new Instrument
 impl InstrumentConfig {
+    /// For each instrument, this code builds an Instrument instance from the a Config
     pub fn create_instrument(config: &InstrumentConfig) -> Box<dyn Instrument> {
         match config {
             InstrumentConfig::Mixer { name } => Box::new(Mixer::new(name)),
@@ -46,14 +56,19 @@ impl InstrumentConfig {
         }
     }
 
+    /// Returns the configured name for the Instrument
     pub fn name(&self) -> &String {
-        // Note: for each instrument we need to add this line, seems redundant, should be improved at some point
+        // Note: for each instrument we need to add this line, seems redundant, should be improved or made dynamic 
+        // at some point
         match self {
             InstrumentConfig::Mixer { name } => name,
             InstrumentConfig::RawSource { name, .. } => name,
         }
     }
 
+    /// In the configuration the parameters are referred by a name, but internally we use a ParameterId
+    /// This function can map, per instrument, the parameter name to a ParameterId. In some cases various
+    /// strings map to the same parameter (for example "f" and "frequency" could both resolve to RawSourceParameters::FREQUENCY)
     fn map_parameter_id(&self, parameter_name: &str) -> Result<ParameterId, InstrumentConfigError> {
         // Note: for each instrument we need to know how to map the parameter to the appropriate ParemeterId
         match self {
@@ -79,15 +94,23 @@ impl InstrumentConfig {
     }
 }
 
-// Below here, there's no instrument specific code
+// ********
+// Instrument specific code ends here, the code below does not have to be adjusted
+// for each instrument
+// ********
 
 #[derive(Debug, PartialEq, Deserialize)]
 pub enum InstrumentConfigError {
+    /// The configuration contains a command that is not known
     UnknownCommand(String),
+    /// Some configuration parameters for the instrument were not provided
     MissingCommandParameter(String, String),
+    /// A command referred to a Parameter that is unknown by the instrument
     UnknownParameter(String),
 }
 
+/// Implementation of InstrumentConfig for generic, Instrument agnostic, logic
+/// This code should not change with the introduction of a new Instrument
 impl InstrumentConfig {
     pub fn build_command(
         &self,

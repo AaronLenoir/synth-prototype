@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::{
-    config::instrument::instrument_config::InstrumentConfigError,
     core::instrument::{
         instrument::Instrument,
         instrument_error::InstrumentError,
@@ -11,6 +10,7 @@ use crate::{
     sequencer::event::RackEvent,
 };
 
+/// Instrument generating a constant value, used for testing only
 pub struct DCGeneratorPorts;
 
 impl DCGeneratorPorts {

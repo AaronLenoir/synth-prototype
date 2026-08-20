@@ -42,6 +42,7 @@ new_key_type! {
 const AUDIO_OUT_CHANNELS: u8 = 2;
 const AUDIO_OUT_NAME: &str = "__AUDIO_OUT";
 
+/// The Rack holds all instruments and the connections between the instruments
 pub struct Rack {
     instruments: SlotMap<InstrumentId, Box<dyn Instrument + 'static>>,
     instrument_id_map: HashMap<String, InstrumentId>,
