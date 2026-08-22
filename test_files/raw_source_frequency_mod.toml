@@ -11,15 +11,17 @@ waveform=1
 type="RawSource"
 name="LFO1"
 [instruments.parameters]
-frequency=5
-waveform=2
+frequency=10
+waveform=1
+fm_depth=0.1
 
 [[instruments]]
 type="RawSource"
 name="raw_source"
 [instruments.parameters]
 frequency=200
-waveform=1
+waveform=3
+fm_depth=0.5
 
 # [source instrument, source port, target instrument, target port]
 [connections]

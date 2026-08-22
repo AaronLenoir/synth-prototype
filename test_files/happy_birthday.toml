@@ -1,5 +1,4 @@
 [rack]
-bitrate=48000
 
 [[instruments]]
 type="Mixer"

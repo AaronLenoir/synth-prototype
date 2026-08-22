@@ -4,7 +4,7 @@
 type="RawSource"
 name="raw_source"
 [instruments.parameters]
-frequency=440
+frequency=10000
 waveform=2
 
 # [source instrument, source port, target instrument, target port]

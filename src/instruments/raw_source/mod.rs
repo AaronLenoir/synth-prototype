@@ -1,3 +1,4 @@
 // "Raw Source", the Signal Generator
 pub mod raw_source;
-pub mod wavetables;
+pub mod wavetable_lookup;
+pub mod waveform;

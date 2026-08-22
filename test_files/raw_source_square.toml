@@ -1,12 +1,11 @@
 [rack]
-bitrate=48000
 
 [[instruments]]
 type="RawSource"
 name="raw_source"
 [instruments.parameters]
-frequency=500
-waveform=1
+frequency=10000
+waveform=3
 
 # [source instrument, source port, target instrument, target port]
 [connections]

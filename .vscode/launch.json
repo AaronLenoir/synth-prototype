@@ -15,7 +15,7 @@
                     "--bin=synth-prototype"
                 ]
             },
-            "args": ["test_files/happy_birthday.toml",]
+            "args": ["test_files/raw_source_sine.toml",]
         },
         {
             "name": "Debug unit tests in executable 'synth-prototype'",

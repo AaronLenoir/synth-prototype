@@ -2,19 +2,14 @@ use std::collections::HashMap;
 
 use crate::{
     core::{
-        commands::{InstrumentCommand, ParameterId, RackCommand},
+        commands::{InstrumentCommand, ParameterId},
         instrument::{
             instrument::Instrument,
             instrument_error::InstrumentError,
             instrument_info::InstrumentInfo,
             instrument_ports::{InstrumentPorts, PortId, PortResolver},
         },
-    },
-    instruments::raw_source::wavetables::{
-        Waveform::{self},
-        WavetableLookup,
-    },
-    sequencer::{event::RackEvent},
+    }, instruments::raw_source::{waveform::Waveform}, sequencer::event::RackEvent,
 };
 
 /// RawSource is a signal source than can generate a continuous signal in a
@@ -24,11 +19,11 @@ use crate::{
 pub struct RawSource {
     pub frequency: f32,
     pub waveform: Waveform,
+    pub fm_depth: f32,
 
     info: InstrumentInfo,
     ports: InstrumentPorts,
-
-    wavetables: [WavetableLookup; 2],
+    phase: f32,
 }
 
 // Define the Ports
@@ -48,6 +43,7 @@ pub struct RawSourceParameters;
 impl RawSourceParameters {
     pub const FREQUENCY: ParameterId = ParameterId(0);
     pub const WAVEFORM: ParameterId = ParameterId(1);
+    pub const FM_DEPTH: ParameterId = ParameterId(2);
 }
 
 // Implement the PortResolver
@@ -70,16 +66,14 @@ impl PortResolver for RawSource {
 
 // Implement the constructor
 impl RawSource {
-    pub fn new(name: &str, frequency: f32, waveform: u32) -> Self {
+    pub fn new(name: &str, frequency: f32, waveform: u32, fm_depth: f32) -> Self {
         Self {
             info: InstrumentInfo::new(name),
             ports: InstrumentPorts::new(1, 2),
             frequency: frequency,
+            phase: 0.0,
             waveform: RawSource::map_maveform(waveform),
-            wavetables: [
-                WavetableLookup::new(Waveform::Sine),
-                WavetableLookup::new(Waveform::Saw),
-            ],
+            fm_depth: fm_depth,
         }
     }
 
@@ -87,16 +81,19 @@ impl RawSource {
         match waveform {
             1 => Waveform::Sine,
             2 => Waveform::Saw,
+            3 => Waveform::Square,
             _ => Waveform::None,
         }
     }
 
-    fn next_value(&mut self, delta: f32) -> f32 {
-        match self.waveform {
-            Waveform::None => 0.0,
-            Waveform::Sine => self.wavetables[0].next_value(delta),
-            Waveform::Saw => self.wavetables[1].next_value(delta),
+    fn next_phase(&self, delta: f32) -> f32 {
+        let mut next_phase = self.phase + delta;
+
+        while next_phase >= 1.0 {
+            next_phase = next_phase - 1.0;
         }
+
+        next_phase
     }
 
     fn read_cv_in(&mut self) -> Result<f32, InstrumentError> {
@@ -132,11 +129,13 @@ impl Instrument for RawSource {
 
             let mod_value = self.read_cv_in()?;
 
-            let wave_length = 1_000_000_000.0 / (self.frequency + (self.frequency * mod_value));
+            let modulated_frequency = self.frequency + (self.frequency * mod_value * self.fm_depth);
+            let wave_length = 1_000_000_000.0 / modulated_frequency;
             let sample_length = time_window as f32 / sample_count as f32;
-            let delta = sample_length / wave_length;
+            let phase_delta = sample_length / wave_length;
+            self.phase = self.next_phase(phase_delta);
 
-            let sample = self.next_value(delta);
+            let sample = self.waveform.sample(self.phase, phase_delta);
 
             for port in [RawSourcePorts::OUT_LEFT, RawSourcePorts::OUT_RIGHT] {
                 let name = self.info.name().to_owned();
@@ -153,11 +152,18 @@ impl Instrument for RawSource {
     fn handle_command(&mut self, command: InstrumentCommand) {
         match command {
             InstrumentCommand::Set(RawSourceParameters::FREQUENCY, x) => {
-                self.frequency = x;
+                if (x > 0.0) {
+                    self.frequency = x;
+                }
             }
             InstrumentCommand::Set(RawSourceParameters::WAVEFORM, x) => {
                 if x > 0.0 {
                     self.waveform = RawSource::map_maveform(x as u32);
+                }
+            }
+            InstrumentCommand::Set(RawSourceParameters::FM_DEPTH, x) => {
+                if x >= 0.0 && x <= 1.0 {
+                    self.fm_depth = x;
                 }
             }
             _ => {}

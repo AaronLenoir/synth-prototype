@@ -19,11 +19,20 @@ use crate::{
 
 /// Parameters for the RawSource instrument available in the config
 /// - frequency: in Hz (float)
-/// - waveform: 1 = sine, 2 = sawtooth (integer)
+/// - waveform: 1 = sine, 2 = sawtooth (integer), 3 = square
+/// - fm_depth: how much frequency modulation is applied (0.0 - 1.0), default 1.0
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct RawSourceParameters {
     pub frequency: f32,
     pub waveform: u32,
+    #[serde(default = "RawSourceParameters::default_fm_depth")]
+    pub fm_depth: f32,
+}
+
+impl RawSourceParameters {
+    pub fn default_fm_depth() -> f32 { 
+        1.0
+    }
 }
 
 /// Maps to the [[instruments]] section(s) in the toml file, each
@@ -52,6 +61,7 @@ impl InstrumentConfig {
                 name,
                 parameters.frequency,
                 parameters.waveform,
+                parameters.fm_depth,
             )),
         }
     }
