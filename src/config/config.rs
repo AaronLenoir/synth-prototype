@@ -112,7 +112,8 @@ mod config_tests {
                     name: "generator1".to_string(),
                     parameters: RawSourceParameters {
                         frequency: 1000.0,
-                        waveform: 1
+                        waveform: 1,
+                        fm_depth: 1.0,
                     },
                 },
             ]
