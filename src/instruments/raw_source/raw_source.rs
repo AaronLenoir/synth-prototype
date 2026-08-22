@@ -9,12 +9,14 @@ use crate::{
             instrument_info::InstrumentInfo,
             instrument_ports::{InstrumentPorts, PortId, PortResolver},
         },
-    }, instruments::raw_source::{waveform::Waveform}, sequencer::event::RackEvent,
+    },
+    instruments::raw_source::waveform::Waveform,
+    sequencer::event::RackEvent,
 };
 
 /// RawSource is a signal source than can generate a continuous signal in a
 /// configurable frequency with several possible waveforms
-/// Additionally it features has a CV_IN port that can be used to mod the 
+/// Additionally it features has a CV_IN port that can be used to mod the
 /// frequency
 pub struct RawSource {
     pub frequency: f32,

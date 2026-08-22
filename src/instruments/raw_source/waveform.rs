@@ -13,15 +13,11 @@ impl Waveform {
         match self {
             Waveform::None => 0.0,
             Waveform::Sine => Waveform::sine_sample(phase),
-            Waveform::Saw => {
-                Waveform::saw_sample(phase)
-                    - Waveform::poly_blep(phase, phase_delta)
-            },
+            Waveform::Saw => Waveform::saw_sample(phase) - Waveform::poly_blep(phase, phase_delta),
             Waveform::Square => {
-                Waveform::square_sample(phase)
-                    + Waveform::poly_blep(phase, phase_delta)
+                Waveform::square_sample(phase) + Waveform::poly_blep(phase, phase_delta)
                     - Waveform::poly_blep((phase + 0.5) % 1.0, phase_delta)
-            },
+            }
         }
     }
 
@@ -34,14 +30,10 @@ impl Waveform {
     }
 
     fn square_sample(phase: f32) -> f32 {
-        if phase < 0.5 {
-            1.0
-        } else {
-            -1.0
-        }
+        if phase < 0.5 { 1.0 } else { -1.0 }
     }
 
-    /// Implementation based on 
+    /// Implementation based on
     ///   - https://www.metafunction.co.uk/post/all-about-digital-oscillators-part-2-blits-bleps
     fn poly_blep(phase: f32, phase_delta: f32) -> f32 {
         if phase < phase_delta {

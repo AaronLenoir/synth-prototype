@@ -46,7 +46,7 @@ impl Config {
         Ok(config)
     }
 
-    /// Given a string containing text in valid toml deserializes to a Config 
+    /// Given a string containing text in valid toml deserializes to a Config
     pub fn from_str(s: &str) -> Result<Config, ConfigError> {
         let mut config: Config = toml::from_str(s).map_err(|e| TomlError(e))?;
 
@@ -73,7 +73,7 @@ mod config_tests {
 
     use crate::config::{
         instrument::instrument_config::RawSourceParameters,
-        rack::{connection_config::EndPointConfig},
+        rack::connection_config::EndPointConfig,
         sequencer::{
             clip_config::ClipConfig, meter_config::MeterConfig, musical_position::MusicalPosition,
             pattern_config::PatternConfig,

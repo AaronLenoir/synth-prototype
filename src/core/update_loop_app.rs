@@ -34,10 +34,10 @@ impl DefaultApp {
 impl App for DefaultApp {
     /// Each iteration of the update loop this function is called it will do two things
     /// It will trigger the generation of audio for a specific time window
-    /// 
+    ///
     ///   - Check which events the sequencer wants to execute in this time window
     ///   - Call the Rack update function - who will internally update the instruments in the
-    ///     appropriate order 
+    ///     appropriate order
     fn update(&mut self, dt: u128) {
         let sample_count = (dt as f32 / 1_000_000_000.0) * self.rack.sample_rate as f32;
 

@@ -30,7 +30,7 @@ pub struct RawSourceParameters {
 }
 
 impl RawSourceParameters {
-    pub fn default_fm_depth() -> f32 { 
+    pub fn default_fm_depth() -> f32 {
         1.0
     }
 }
@@ -68,7 +68,7 @@ impl InstrumentConfig {
 
     /// Returns the configured name for the Instrument
     pub fn name(&self) -> &String {
-        // Note: for each instrument we need to add this line, seems redundant, should be improved or made dynamic 
+        // Note: for each instrument we need to add this line, seems redundant, should be improved or made dynamic
         // at some point
         match self {
             InstrumentConfig::Mixer { name } => name,

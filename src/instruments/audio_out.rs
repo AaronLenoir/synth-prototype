@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use rtrb::{Producer};
+use rtrb::Producer;
 
 use crate::{
     core::instrument::{

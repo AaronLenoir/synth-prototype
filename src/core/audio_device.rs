@@ -49,7 +49,7 @@ impl AudioDevice {
         return producer;
     }
 
-    /// Opens the audio stream and attached the closure that writes the data 
+    /// Opens the audio stream and attached the closure that writes the data
     pub fn play(&mut self) {
         self.stream = Some(self.create_stream_and_play());
     }
