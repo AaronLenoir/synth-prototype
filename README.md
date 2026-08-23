@@ -1,0 +1,1 @@
+Configurable audio generator in RUST for educational purposes
