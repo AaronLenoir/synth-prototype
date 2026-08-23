@@ -13,7 +13,6 @@ name="LFO1"
 [instruments.parameters]
 frequency=10
 waveform=1
-fm_depth=0.1
 
 [[instruments]]
 type="RawSource"
@@ -21,7 +20,6 @@ name="raw_source"
 [instruments.parameters]
 frequency=200
 waveform=3
-fm_depth=0.5
 
 # [source instrument, source port, target instrument, target port]
 [connections]
@@ -33,4 +31,24 @@ endpoints = [
     # MAIN AUDIO OUT
     ["raw_source", "OUT_LEFT", "__AUDIO_OUT", "IN_LEFT" ],
     ["raw_source", "OUT_RIGHT", "__AUDIO_OUT", "IN_RIGHT" ],
+]
+
+[sequencer]
+tempo=120
+meter={ numerator = 3, denominator = 4 }
+
+[[sequencer.clips]]
+start={ bar = 1, beat = 1, offset = 0.0 }
+end={ bar = 100, beat = 2, offset = 0.0 } 
+target = "raw_source"
+
+# Alternate between fm depth
+[sequencer.clips.pattern]
+period = 1
+command = "set"
+events = [
+    { parameter = "fm_depth", value = 0.0 },
+    { parameter = "fm_depth", value = 0.25 },
+    { parameter = "fm_depth", value = 0.5 },
+    { parameter = "fm_depth", value = 1.0 },
 ]

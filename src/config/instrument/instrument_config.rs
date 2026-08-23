@@ -96,6 +96,7 @@ impl InstrumentConfig {
                 "frequency" => Ok(raw_source::raw_source::RawSourceParameters::FREQUENCY),
                 "w" => Ok(raw_source::raw_source::RawSourceParameters::WAVEFORM),
                 "waveform" => Ok(raw_source::raw_source::RawSourceParameters::WAVEFORM),
+                "fm_depth" => Ok(raw_source::raw_source::RawSourceParameters::FM_DEPTH),
                 _ => Err(InstrumentConfigError::UnknownParameter(
                     parameter_name.to_string(),
                 )),
