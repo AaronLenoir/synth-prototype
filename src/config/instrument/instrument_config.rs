@@ -8,7 +8,7 @@ use crate::{
         instrument::instrument::Instrument,
     },
     instruments::{
-        mixer::Mixer,
+        mixer::mixer::Mixer,
         raw_source::{self, raw_source::RawSource},
     },
 };
@@ -35,6 +35,14 @@ impl RawSourceParameters {
     }
 }
 
+/// Parameters for the Mixer instrument available in the config
+/// - channels: 1 - 255
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct MixerParameters {
+    pub channels: u8,
+    pub master_gain: f32,
+}
+
 /// Maps to the [[instruments]] section(s) in the toml file, each
 /// instrument requires an entry here, the name property is mandatory
 /// any other parameters can vary per instrument
@@ -43,6 +51,7 @@ impl RawSourceParameters {
 pub enum InstrumentConfig {
     Mixer {
         name: String,
+        parameters: MixerParameters,
     },
     RawSource {
         name: String,
@@ -56,7 +65,11 @@ impl InstrumentConfig {
     /// For each instrument, this code builds an Instrument instance from the a Config
     pub fn create_instrument(config: &InstrumentConfig) -> Box<dyn Instrument> {
         match config {
-            InstrumentConfig::Mixer { name } => Box::new(Mixer::new(name)),
+            InstrumentConfig::Mixer { name, parameters } => Box::new(Mixer::new(
+                name,
+                parameters.channels,
+                parameters.master_gain,
+            )),
             InstrumentConfig::RawSource { name, parameters } => Box::new(RawSource::new(
                 name,
                 parameters.frequency,
@@ -71,7 +84,7 @@ impl InstrumentConfig {
         // Note: for each instrument we need to add this line, seems redundant, should be improved or made dynamic
         // at some point
         match self {
-            InstrumentConfig::Mixer { name } => name,
+            InstrumentConfig::Mixer { name, .. } => name,
             InstrumentConfig::RawSource { name, .. } => name,
         }
     }
@@ -82,8 +95,11 @@ impl InstrumentConfig {
     fn map_parameter_id(&self, parameter_name: &str) -> Result<ParameterId, InstrumentConfigError> {
         // Note: for each instrument we need to know how to map the parameter to the appropriate ParemeterId
         match self {
-            InstrumentConfig::Mixer { name: _ } => {
-                // The mixer (currently) has no known parameters
+            InstrumentConfig::Mixer {
+                name: _,
+                parameters: _,
+            } => {
+                // The mixer (currently) has no known parameters that can be set
                 Err(InstrumentConfigError::UnknownParameter(
                     parameter_name.to_string(),
                 ))

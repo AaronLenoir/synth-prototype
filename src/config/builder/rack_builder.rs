@@ -114,8 +114,8 @@ impl RackBuilder {
 #[cfg(test)]
 mod rack_builder_tests {
     use crate::{
-        config::rack::rack_config::RackConfig,
-        instruments::mixer::{MixerInPorts, MixerOutPorts},
+        config::{instrument::instrument_config::MixerParameters, rack::rack_config::RackConfig},
+        instruments::mixer::mixer::MixerOutPorts,
     };
 
     use super::*;
@@ -125,6 +125,10 @@ mod rack_builder_tests {
         let mut config = Config::new(RackConfig {}, None);
         config.instruments = vec![InstrumentConfig::Mixer {
             name: "mixer".to_string(),
+            parameters: MixerParameters {
+                channels: 2,
+                master_gain: 1.0,
+            },
         }];
 
         let rack = RackBuilder::from_config(&config).unwrap();
@@ -140,9 +144,17 @@ mod rack_builder_tests {
         config.instruments = vec![
             InstrumentConfig::Mixer {
                 name: "mixer1".to_string(),
+                parameters: MixerParameters {
+                    channels: 2,
+                    master_gain: 1.0,
+                },
             },
             InstrumentConfig::Mixer {
                 name: "mixer2".to_string(),
+                parameters: MixerParameters {
+                    channels: 2,
+                    master_gain: 1.0,
+                },
             },
         ];
 
@@ -153,7 +165,7 @@ mod rack_builder_tests {
             },
             target: EndPointConfig {
                 instrument: "mixer2".to_string(),
-                port: "IN_LEFT_01".to_string(),
+                port: "IN_LEFT.1".to_string(),
             },
         }];
 
@@ -167,7 +179,7 @@ mod rack_builder_tests {
             },
             target: EndPoint {
                 instrument_name: "mixer2".to_string(),
-                port: MixerInPorts::IN_LEFT_01,
+                port: 0,
             },
         };
 

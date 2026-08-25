@@ -72,7 +72,7 @@ mod config_tests {
     use std::collections::HashMap;
 
     use crate::config::{
-        instrument::instrument_config::RawSourceParameters,
+        instrument::instrument_config::{MixerParameters, RawSourceParameters},
         rack::connection_config::EndPointConfig,
         sequencer::{
             clip_config::ClipConfig, meter_config::MeterConfig, musical_position::MusicalPosition,
@@ -91,6 +91,9 @@ mod config_tests {
         [[instruments]]
         type="Mixer"
         name="mixer1"
+        [instruments.parameters]
+        channels=1
+        master_gain=1.0
 
         [[instruments]]
         type="RawSource"
@@ -107,6 +110,10 @@ mod config_tests {
             vec![
                 InstrumentConfig::Mixer {
                     name: "mixer1".to_string(),
+                    parameters: MixerParameters {
+                        channels: 1,
+                        master_gain: 1.0,
+                    }
                 },
                 InstrumentConfig::RawSource {
                     name: "generator1".to_string(),
@@ -129,6 +136,9 @@ mod config_tests {
         [[instruments]]
         type="Mixer"
         name="mixer1"
+        [instruments.parameters]
+        channels=1
+        master_gain=1.0
 
         [[instruments]]
         type="RawSource"
@@ -166,6 +176,9 @@ mod config_tests {
         [[instruments]]
         type="Mixer"
         name="mixer1"
+        [instruments.parameters]
+        channels=1
+        master_gain=1.0
 
         [[instruments]]
         type="RawSource"
@@ -206,6 +219,9 @@ mod config_tests {
         [[instruments]]
         type="Mixer"
         name="mixer1"
+        [instruments.parameters]
+        channels=1
+        master_gain=1.0
 
         [sequencer]
         tempo=120

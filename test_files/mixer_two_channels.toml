@@ -1,0 +1,35 @@
+[rack]
+
+[[instruments]]
+type="RawSource"
+name="signal1"
+[instruments.parameters]
+frequency=221
+waveform=1
+
+[[instruments]]
+type="RawSource"
+name="signal2"
+[instruments.parameters]
+frequency=219.2
+waveform=1
+
+[[instruments]]
+type="Mixer"
+name="mixer"
+[instruments.parameters]
+channels=2
+master_gain=0.4
+
+# [source instrument, source port, target instrument, target port]
+[connections]
+endpoints = [
+    ["signal1", "OUT_LEFT", "mixer", "IN_LEFT.1"],
+    ["signal1", "OUT_RIGHT", "mixer", "IN_RIGHT.1"],
+    ["signal2", "OUT_LEFT", "mixer", "IN_LEFT.2"],
+    ["signal2", "OUT_RIGHT", "mixer", "IN_RIGHT.2"],
+
+    # MAIN AUDIO OUT
+    ["mixer", "OUT_LEFT", "__AUDIO_OUT", "IN_LEFT" ],
+    ["mixer", "OUT_RIGHT", "__AUDIO_OUT", "IN_RIGHT" ],
+]
