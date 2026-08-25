@@ -43,7 +43,7 @@ impl Mixer {
     }
 
     fn port_id(&self, channel: u8, side: Side) -> Result<PortId, InstrumentError> {
-        if channel > self.channels {
+        if channel >= self.channels {
             Err(InstrumentError::GeneralError(
                 "non-existing channel used".to_string(),
             ))
@@ -73,9 +73,9 @@ impl PortResolver for Mixer {
             _ => return None,
         };
 
-        let channel_index: u8 = index.parse::<u8>().unwrap() - 1;
+        let channel_index = index.parse::<u8>().ok()?.checked_sub(1)?;
 
-        self.port_id(channel_index as u8, side).ok()
+        self.port_id(channel_index, side).ok()
     }
 }
 
@@ -96,10 +96,11 @@ impl Instrument for Mixer {
     ) -> Result<(), InstrumentError> {
         let sample_count_as_usize = sample_count as usize;
 
-        let mut left_buffer: Vec<f32> = vec![0.0; sample_count_as_usize];
-        let mut right_buffer: Vec<f32> = vec![0.0; sample_count_as_usize];
+        let name = self.info.name().to_owned();
+        for _ in 0..sample_count_as_usize {
+            let mut left: f32 = 0.0;
+            let mut right: f32 = 0.0;
 
-        for sample_index in 0..sample_count_as_usize {
             for channel in 0..self.channels {
                 for side in [Side::Left, Side::Right] {
                     let port_id = self.port_id(channel, side)?;
@@ -111,27 +112,21 @@ impl Instrument for Mixer {
                         .unwrap_or(0.0);
 
                     match side {
-                        Side::Left => left_buffer[sample_index] += sample,
-                        Side::Right => right_buffer[sample_index] += sample,
+                        Side::Left => left += sample,
+                        Side::Right => right += sample,
                     }
                 }
             }
-        }
 
-        let name = self.info.name().to_owned();
-        for i in 0..sample_count_as_usize {
-            for out_port in [MixerOutPorts::OUT_LEFT, MixerOutPorts::OUT_RIGHT] {
-                let sample = match out_port {
-                    MixerOutPorts::OUT_LEFT => left_buffer[i] * self.master_gain,
-                    MixerOutPorts::OUT_RIGHT => right_buffer[i] * self.master_gain,
-                    _ => 0.0,
-                };
+            self.ports
+                .output_port_mut(MixerOutPorts::OUT_LEFT)
+                .write_if_connected(left * self.master_gain)
+                .map_err(|e| InstrumentError::from_port_error(&name, e))?;
 
-                let output = self.ports.output_port_mut(out_port);
-                output
-                    .write_if_connected(sample)
-                    .map_err(|e| InstrumentError::from_port_error(&name, e))?;
-            }
+            self.ports
+                .output_port_mut(MixerOutPorts::OUT_RIGHT)
+                .write_if_connected(right * self.master_gain)
+                .map_err(|e| InstrumentError::from_port_error(&name, e))?;
         }
 
         Ok(())
