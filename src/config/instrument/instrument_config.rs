@@ -8,7 +8,7 @@ use crate::{
         instrument::instrument::Instrument,
     },
     instruments::{
-        mixer::mixer::Mixer,
+        mixer::{channel_parameters::ChannelParameters, mixer::Mixer},
         raw_source::{self, raw_source::RawSource},
     },
 };
@@ -41,6 +41,13 @@ impl RawSourceParameters {
 pub struct MixerParameters {
     pub channels: u8,
     pub master_gain: (f32, f32),
+    pub channel_parameters: Vec<MixerChannelParameters>,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct MixerChannelParameters {
+    pub gain: f32,
+    pub balance: f32,
 }
 
 /// Maps to the [[instruments]] section(s) in the toml file, each
@@ -69,6 +76,11 @@ impl InstrumentConfig {
                 name,
                 parameters.channels,
                 parameters.master_gain,
+                parameters
+                    .channel_parameters
+                    .iter()
+                    .map(|x| ChannelParameters::new(x.gain, x.balance))
+                    .collect(),
             )),
             InstrumentConfig::RawSource { name, parameters } => Box::new(RawSource::new(
                 name,

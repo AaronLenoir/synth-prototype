@@ -114,8 +114,11 @@ impl RackBuilder {
 #[cfg(test)]
 mod rack_builder_tests {
     use crate::{
-        config::{instrument::instrument_config::MixerParameters, rack::rack_config::RackConfig},
-        instruments::mixer::mixer::MixerOutPorts,
+        config::{
+            instrument::instrument_config::{MixerChannelParameters, MixerParameters},
+            rack::rack_config::RackConfig,
+        },
+        instruments::mixer::{channel_parameters::ChannelParameters, mixer::MixerOutPorts},
     };
 
     use super::*;
@@ -128,6 +131,16 @@ mod rack_builder_tests {
             parameters: MixerParameters {
                 channels: 2,
                 master_gain: (1.0, 1.0),
+                channel_parameters: vec![
+                    MixerChannelParameters {
+                        gain: 0.0,
+                        balance: 0.0,
+                    },
+                    MixerChannelParameters {
+                        gain: 0.0,
+                        balance: 0.0,
+                    },
+                ],
             },
         }];
 
@@ -147,6 +160,16 @@ mod rack_builder_tests {
                 parameters: MixerParameters {
                     channels: 2,
                     master_gain: (1.0, 1.0),
+                    channel_parameters: vec![
+                        MixerChannelParameters {
+                            gain: 0.0,
+                            balance: 0.0,
+                        },
+                        MixerChannelParameters {
+                            gain: 0.0,
+                            balance: 0.0,
+                        },
+                    ],
                 },
             },
             InstrumentConfig::Mixer {
@@ -154,6 +177,16 @@ mod rack_builder_tests {
                 parameters: MixerParameters {
                     channels: 2,
                     master_gain: (1.0, 1.0),
+                    channel_parameters: vec![
+                        MixerChannelParameters {
+                            gain: 0.0,
+                            balance: 0.0,
+                        },
+                        MixerChannelParameters {
+                            gain: 0.0,
+                            balance: 0.0,
+                        },
+                    ],
                 },
             },
         ];

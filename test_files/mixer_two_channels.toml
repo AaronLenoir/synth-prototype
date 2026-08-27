@@ -22,6 +22,14 @@ channels=2
 # left and right master gain
 master_gain=[0.5, 0.5]
 
+[[instruments.parameters.channel_parameters]]
+gain=1.0
+balance=-1.0
+
+[[instruments.parameters.channel_parameters]]
+gain=1.0
+balance=0.0
+
 # [source instrument, source port, target instrument, target port]
 [connections]
 endpoints = [

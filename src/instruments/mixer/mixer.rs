@@ -7,6 +7,7 @@ use crate::{
         instrument_info::InstrumentInfo,
         instrument_ports::{InstrumentPorts, PortId, PortResolver},
     },
+    instruments::mixer::channel_parameters::{self, ChannelParameters},
     sequencer::event::RackEvent,
 };
 
@@ -31,15 +32,22 @@ pub struct Mixer {
     channels: u8,
     // left and right master gain
     master_gain: (f32, f32),
+    channel_parameters: Vec<ChannelParameters>,
 }
 
 impl Mixer {
-    pub fn new(name: &str, channels: u8, master_gain: (f32, f32)) -> Self {
+    pub fn new(
+        name: &str,
+        channels: u8,
+        master_gain: (f32, f32),
+        channel_parameters: Vec<ChannelParameters>,
+    ) -> Self {
         Self {
             info: InstrumentInfo::new(name),
             ports: InstrumentPorts::new(channels * 2, 2),
             channels: channels,
             master_gain: master_gain,
+            channel_parameters: channel_parameters,
         }
     }
 
@@ -103,6 +111,8 @@ impl Instrument for Mixer {
             let mut right: f32 = 0.0;
 
             for channel in 0..self.channels {
+                let parameters = &self.channel_parameters[channel as usize];
+
                 for side in [Side::Left, Side::Right] {
                     let port_id = self.port_id(channel, side)?;
 
@@ -113,8 +123,13 @@ impl Instrument for Mixer {
                         .unwrap_or(0.0);
 
                     match side {
-                        Side::Left => left += sample,
-                        Side::Right => right += sample,
+                        Side::Left => {
+                            left += (sample * parameters.gain)
+                                * (1.0 - ((parameters.balance + 1.0) / 2.0))
+                        }
+                        Side::Right => {
+                            right += (sample * parameters.gain) * ((parameters.balance + 1.0) / 2.0)
+                        }
                     }
                 }
             }
