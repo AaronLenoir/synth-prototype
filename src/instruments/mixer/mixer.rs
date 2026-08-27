@@ -29,11 +29,12 @@ pub struct Mixer {
     info: InstrumentInfo,
     ports: InstrumentPorts,
     channels: u8,
-    master_gain: f32,
+    // left and right master gain
+    master_gain: (f32, f32),
 }
 
 impl Mixer {
-    pub fn new(name: &str, channels: u8, master_gain: f32) -> Self {
+    pub fn new(name: &str, channels: u8, master_gain: (f32, f32)) -> Self {
         Self {
             info: InstrumentInfo::new(name),
             ports: InstrumentPorts::new(channels * 2, 2),
@@ -120,12 +121,12 @@ impl Instrument for Mixer {
 
             self.ports
                 .output_port_mut(MixerOutPorts::OUT_LEFT)
-                .write_if_connected(left * self.master_gain)
+                .write_if_connected(left * self.master_gain.0)
                 .map_err(|e| InstrumentError::from_port_error(&name, e))?;
 
             self.ports
                 .output_port_mut(MixerOutPorts::OUT_RIGHT)
-                .write_if_connected(right * self.master_gain)
+                .write_if_connected(right * self.master_gain.1)
                 .map_err(|e| InstrumentError::from_port_error(&name, e))?;
         }
 

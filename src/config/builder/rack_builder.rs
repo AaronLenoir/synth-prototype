@@ -127,7 +127,7 @@ mod rack_builder_tests {
             name: "mixer".to_string(),
             parameters: MixerParameters {
                 channels: 2,
-                master_gain: 1.0,
+                master_gain: (1.0, 1.0),
             },
         }];
 
@@ -146,14 +146,14 @@ mod rack_builder_tests {
                 name: "mixer1".to_string(),
                 parameters: MixerParameters {
                     channels: 2,
-                    master_gain: 1.0,
+                    master_gain: (1.0, 1.0),
                 },
             },
             InstrumentConfig::Mixer {
                 name: "mixer2".to_string(),
                 parameters: MixerParameters {
                     channels: 2,
-                    master_gain: 1.0,
+                    master_gain: (1.0, 1.0),
                 },
             },
         ];

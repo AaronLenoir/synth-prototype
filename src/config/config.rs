@@ -93,7 +93,7 @@ mod config_tests {
         name="mixer1"
         [instruments.parameters]
         channels=1
-        master_gain=1.0
+        master_gain=[1.0, 1.0]
 
         [[instruments]]
         type="RawSource"
@@ -112,7 +112,7 @@ mod config_tests {
                     name: "mixer1".to_string(),
                     parameters: MixerParameters {
                         channels: 1,
-                        master_gain: 1.0,
+                        master_gain: (1.0, 1.0),
                     }
                 },
                 InstrumentConfig::RawSource {
@@ -138,7 +138,7 @@ mod config_tests {
         name="mixer1"
         [instruments.parameters]
         channels=1
-        master_gain=1.0
+        master_gain=[1.0, 1.0]
 
         [[instruments]]
         type="RawSource"
@@ -178,7 +178,7 @@ mod config_tests {
         name="mixer1"
         [instruments.parameters]
         channels=1
-        master_gain=1.0
+        master_gain=[1.0, 1.0]
 
         [[instruments]]
         type="RawSource"
@@ -221,7 +221,7 @@ mod config_tests {
         name="mixer1"
         [instruments.parameters]
         channels=1
-        master_gain=1.0
+        master_gain=[1.0, 1.0]
 
         [sequencer]
         tempo=120

@@ -40,7 +40,7 @@ impl RawSourceParameters {
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct MixerParameters {
     pub channels: u8,
-    pub master_gain: f32,
+    pub master_gain: (f32, f32),
 }
 
 /// Maps to the [[instruments]] section(s) in the toml file, each

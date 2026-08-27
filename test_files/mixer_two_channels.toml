@@ -19,7 +19,8 @@ type="Mixer"
 name="mixer"
 [instruments.parameters]
 channels=2
-master_gain=0.4
+# left and right master gain
+master_gain=[0.5, 0.5]
 
 # [source instrument, source port, target instrument, target port]
 [connections]
