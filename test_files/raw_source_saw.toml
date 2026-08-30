@@ -14,3 +14,22 @@ endpoints = [
     ["raw_source", "OUT_LEFT", "__AUDIO_OUT", "IN_LEFT" ],
     ["raw_source", "OUT_RIGHT", "__AUDIO_OUT", "IN_RIGHT" ],
 ]
+
+[sequencer]
+tempo=120
+meter={ numerator = 4, denominator = 4 }
+
+[[sequencer.clips]]
+start={ bar = 1, beat = 1, offset = 0.0 }
+end={ bar = 200, beat = 1, offset = 0.0 } 
+target = "raw_source"
+
+[sequencer.clips.pattern]
+period = 0.125
+command = "set"
+events = [
+    { parameter = "f", value = 50.0 },
+    { parameter = "f", value = 100.0 },
+    { parameter = "f", value = 500.0 },
+    { parameter = "f", value = 2000.0 },
+]

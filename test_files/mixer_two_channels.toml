@@ -11,7 +11,7 @@ waveform=1
 type="RawSource"
 name="signal2"
 [instruments.parameters]
-frequency=219.2
+frequency=419.2
 waveform=1
 
 [[instruments]]
@@ -41,4 +41,21 @@ endpoints = [
     # MAIN AUDIO OUT
     ["mixer", "OUT_LEFT", "__AUDIO_OUT", "IN_LEFT" ],
     ["mixer", "OUT_RIGHT", "__AUDIO_OUT", "IN_RIGHT" ],
+]   
+
+[sequencer]
+tempo=120
+meter={ numerator = 4, denominator = 4 }
+
+[[sequencer.clips]]
+start={ bar = 1, beat = 1, offset = 0.0 }
+end={ bar = 100, beat = 1, offset = 0.0 } 
+target = "mixer"
+
+[sequencer.clips.pattern]
+period = 0.125
+command = "set"
+events = [
+    { parameter = "GAIN.1", value = 0.0 },
+    { parameter = "GAIN.1", value = 0.9 },
 ]

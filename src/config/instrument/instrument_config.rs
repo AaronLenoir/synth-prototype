@@ -6,10 +6,8 @@ use crate::{
     core::{
         commands::{InstrumentCommand, ParameterId},
         instrument::instrument::Instrument,
-    },
-    instruments::{
-        mixer::{channel_parameters::ChannelParameters, mixer::Mixer},
-        raw_source::{self, raw_source::RawSource},
+    }, instruments::{
+        mixer::channel_parameters::ChannelParameters, mixer::mixer::Mixer as MixerInstrument, mixer::mixer::MixerParameters as MixerInstrumentParameters, raw_source::{self, raw_source::RawSource},
     },
 };
 
@@ -72,7 +70,7 @@ impl InstrumentConfig {
     /// For each instrument, this code builds an Instrument instance from the a Config
     pub fn create_instrument(config: &InstrumentConfig) -> Box<dyn Instrument> {
         match config {
-            InstrumentConfig::Mixer { name, parameters } => Box::new(Mixer::new(
+            InstrumentConfig::Mixer { name, parameters } => Box::new(MixerInstrument::new(
                 name,
                 parameters.channels,
                 parameters.master_gain,
@@ -112,18 +110,27 @@ impl InstrumentConfig {
                 parameters: _,
             } => {
                 // The mixer (currently) has no known parameters that can be set
-                Err(InstrumentConfigError::UnknownParameter(
-                    parameter_name.to_string(),
-                ))
+                if parameter_name.starts_with("GAIN.") || 
+                   parameter_name.starts_with("BALANCE.") {
+                    let channel_parameter = MixerInstrumentParameters::map_channel_parameter(parameter_name);
+                    if channel_parameter.is_some() {
+                        return Ok(channel_parameter.unwrap());
+                    }
+                }
+                match parameter_name {
+                    "mgl" | "master_gain_left" => Ok(MixerInstrumentParameters::MASTER_GAIN_LEFT),
+                    "mgr" | "master_gain_right" => Ok(MixerInstrumentParameters::MASTER_GAIN_LEFT),
+                    _ => Err(InstrumentConfigError::UnknownParameter(
+                        parameter_name.to_string(),
+                    )),
+                }
             }
             InstrumentConfig::RawSource {
                 name: _,
                 parameters: _,
             } => match parameter_name {
-                "f" => Ok(raw_source::raw_source::RawSourceParameters::FREQUENCY),
-                "frequency" => Ok(raw_source::raw_source::RawSourceParameters::FREQUENCY),
-                "w" => Ok(raw_source::raw_source::RawSourceParameters::WAVEFORM),
-                "waveform" => Ok(raw_source::raw_source::RawSourceParameters::WAVEFORM),
+                "f" | "frequency" => Ok(raw_source::raw_source::RawSourceParameters::FREQUENCY),
+                "w" | "waveform" => Ok(raw_source::raw_source::RawSourceParameters::WAVEFORM),
                 "fm_depth" => Ok(raw_source::raw_source::RawSourceParameters::FM_DEPTH),
                 _ => Err(InstrumentConfigError::UnknownParameter(
                     parameter_name.to_string(),
