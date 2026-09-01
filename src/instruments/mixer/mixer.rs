@@ -1,12 +1,18 @@
 use std::collections::HashMap;
 
 use crate::{
-    core::{commands::{InstrumentCommand, ParameterId}, instrument::{
-        instrument::Instrument,
-        instrument_error::InstrumentError,
-        instrument_info::InstrumentInfo,
-        instrument_ports::{InstrumentPorts, PortId, PortResolver},
-    }, utils::smooth_value::SmoothValue}, instruments::mixer::channel_parameters::{self, ChannelParameters}, sequencer::{event::RackEvent, sample_offset},
+    core::{
+        commands::{InstrumentCommand, ParameterId},
+        instrument::{
+            instrument::Instrument,
+            instrument_error::InstrumentError,
+            instrument_info::InstrumentInfo,
+            instrument_ports::{InstrumentPorts, PortId, PortResolver},
+        },
+        utils::smooth_value::SmoothValue,
+    },
+    instruments::mixer::channel_parameters::{self, ChannelParameters},
+    sequencer::{event::RackEvent, sample_offset},
 };
 
 #[derive(Copy, Clone)]
@@ -35,8 +41,9 @@ impl MixerParameters {
         if parameter_name.starts_with("GAIN.") {
             if let Some(channel) = parameter_name
                 .strip_prefix("GAIN.")
-                .and_then(|n| n.parse::<u32>().ok()) {
-                    return Some(ParameterId(Self::PARAMETER_OFFSET + (channel - 1)));
+                .and_then(|n| n.parse::<u32>().ok())
+            {
+                return Some(ParameterId(Self::PARAMETER_OFFSET + (channel - 1)));
             } else {
                 return None;
             }
@@ -45,8 +52,9 @@ impl MixerParameters {
         if parameter_name.starts_with("BALANCE.") {
             if let Some(channel) = parameter_name
                 .strip_prefix("BALANCE.")
-                .and_then(|n| n.parse::<u32>().ok()) {
-                    return Some(ParameterId(Self::BALANCE_PARAMETER_OFFSET + (channel - 1)));
+                .and_then(|n| n.parse::<u32>().ok())
+            {
+                return Some(ParameterId(Self::BALANCE_PARAMETER_OFFSET + (channel - 1)));
             } else {
                 return None;
             }
@@ -87,7 +95,10 @@ impl Mixer {
             info: InstrumentInfo::new(name),
             ports: InstrumentPorts::new(channels * 2, 2),
             channels: channels,
-            master_gain: (SmoothValue::new(master_gain.0), SmoothValue::new(master_gain.1)),
+            master_gain: (
+                SmoothValue::new(master_gain.0),
+                SmoothValue::new(master_gain.1),
+            ),
             channel_parameters: channel_parameters,
         }
     }
@@ -165,13 +176,8 @@ impl Instrument for Mixer {
                     let gain = parameters.gain.value();
                     let balance = parameters.balance.value();
                     match side {
-                        Side::Left => {
-                            left += (sample * gain)
-                                * (1.0 - ((balance + 1.0) / 2.0))
-                        }
-                        Side::Right => {
-                            right += (sample * gain) * ((balance + 1.0) / 2.0)
-                        }
+                        Side::Left => left += (sample * gain) * (1.0 - ((balance + 1.0) / 2.0)),
+                        Side::Right => right += (sample * gain) * ((balance + 1.0) / 2.0),
                     }
                 }
             }
@@ -194,22 +200,26 @@ impl Instrument for Mixer {
         match command {
             InstrumentCommand::Set(MixerParameters::MASTER_GAIN_LEFT, x) => {
                 self.master_gain.0.set(x);
-            },
+            }
             InstrumentCommand::Set(MixerParameters::MASTER_GAIN_RIGHT, x) => {
                 self.master_gain.1.set(x);
-            },
+            }
             InstrumentCommand::Set(ParameterId(value), x) => {
                 let channel_index = MixerParameters::channel_index(value);
-                if channel_index.is_none() || channel_index.unwrap() as usize >= self.channel_parameters.len() {
+                if channel_index.is_none()
+                    || channel_index.unwrap() as usize >= self.channel_parameters.len()
+                {
                     // Do nothing, in purpose
                     return;
                 }
                 if value > MixerParameters::BALANCE_PARAMETER_OFFSET {
-                    self.channel_parameters[channel_index.unwrap()].balance.set(x);
+                    self.channel_parameters[channel_index.unwrap()]
+                        .balance
+                        .set(x);
                 } else {
                     self.channel_parameters[channel_index.unwrap()].gain.set(x);
                 }
-            },
+            }
             _ => {
                 // do nothing, on purpose
             }

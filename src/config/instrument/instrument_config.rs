@@ -6,8 +6,12 @@ use crate::{
     core::{
         commands::{InstrumentCommand, ParameterId},
         instrument::instrument::Instrument,
-    }, instruments::{
-        mixer::channel_parameters::ChannelParameters, mixer::mixer::Mixer as MixerInstrument, mixer::mixer::MixerParameters as MixerInstrumentParameters, raw_source::{self, raw_source::RawSource},
+    },
+    instruments::{
+        mixer::channel_parameters::ChannelParameters,
+        mixer::mixer::Mixer as MixerInstrument,
+        mixer::mixer::MixerParameters as MixerInstrumentParameters,
+        raw_source::{self, raw_source::RawSource},
     },
 };
 
@@ -110,9 +114,9 @@ impl InstrumentConfig {
                 parameters: _,
             } => {
                 // The mixer (currently) has no known parameters that can be set
-                if parameter_name.starts_with("GAIN.") || 
-                   parameter_name.starts_with("BALANCE.") {
-                    let channel_parameter = MixerInstrumentParameters::map_channel_parameter(parameter_name);
+                if parameter_name.starts_with("GAIN.") || parameter_name.starts_with("BALANCE.") {
+                    let channel_parameter =
+                        MixerInstrumentParameters::map_channel_parameter(parameter_name);
                     if channel_parameter.is_some() {
                         return Ok(channel_parameter.unwrap());
                     }

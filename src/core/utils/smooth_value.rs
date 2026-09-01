@@ -6,7 +6,7 @@ pub struct SmoothValue {
 }
 
 impl SmoothValue {
-    const TRESHOLD : f32 = 0.001;
+    const TRESHOLD: f32 = 0.001;
     const DEFAULT_FACTOR: f32 = 0.01; // Default 1% per tick
 
     pub fn new(value: f32) -> Self {
