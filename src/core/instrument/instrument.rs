@@ -38,7 +38,7 @@ pub trait Instrument: PortResolver {
         &mut self,
         time_window: u128,
         sample_count: u32,
-        events: HashMap<u32, Vec<&RackEvent>>,
+        events: &HashMap<u32, Vec<&RackEvent>>,
     ) -> Result<(), InstrumentError>;
 
     /// Handles a given InstrumentCommand (if it makes sense)

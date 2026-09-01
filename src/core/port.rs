@@ -1,4 +1,4 @@
-use rtrb::{Consumer, Producer};
+use rtrb::{Consumer, Producer, RingBuffer};
 
 #[derive(Debug)]
 pub enum PortError {
@@ -6,6 +6,22 @@ pub enum PortError {
     AlreadyConnected,
     BufferFull,
     BufferEmpty,
+}
+
+pub struct Ports {}
+
+impl Ports {
+    pub fn connect(
+        output: &mut OutputPort,
+        input: &mut InputPort,
+        buffer_size: usize,
+    ) -> Result<(), PortError> {
+        let (producer, consumer): (Producer<f32>, Consumer<f32>) = RingBuffer::new(buffer_size);
+        output.set_producer(producer)?;
+        input.set_consumer(consumer)?;
+
+        Ok(())
+    }
 }
 
 /// The OutputPort (and InputPort) are used to connect instrument's output to the next input

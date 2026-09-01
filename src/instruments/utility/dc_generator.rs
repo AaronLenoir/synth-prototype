@@ -60,7 +60,7 @@ impl Instrument for DCGenerator {
         &mut self,
         time_window: u128,
         sample_count: u32,
-        events: HashMap<u32, Vec<&RackEvent>>,
+        events: &HashMap<u32, Vec<&RackEvent>>,
     ) -> Result<(), InstrumentError> {
         let value = self.value;
         let name = self.info.name().to_owned();
@@ -93,7 +93,7 @@ mod dc_generator_tests {
             .set_producer(producer)
             .map_err(|e| InstrumentError::from_port_error("generator", e))?;
 
-        sut.update(1, 20, HashMap::new())?;
+        sut.update(1, 20, &HashMap::new())?;
 
         let chunk = consumer
             .read_chunk(20)

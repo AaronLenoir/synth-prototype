@@ -12,7 +12,7 @@ use crate::{
         audio_device::AudioDevice,
         commands::RackCommand,
         instrument::{instrument::Instrument, instrument_error::InstrumentError},
-        port::PortError,
+        port::{PortError, Ports},
     },
     instruments::audio_out::{AudioOut, AudioOutPorts},
     rack::{connection::Connection, connection_order::ConnectionOrder},
@@ -119,11 +119,7 @@ impl Rack {
         let input = target.ports().input_port_mut(connection.target.port);
 
         // create a buffer and connect producer and consumer
-        let (producer, consumer): (Producer<f32>, Consumer<f32>) = RingBuffer::new(buffer_size);
-        output
-            .set_producer(producer)
-            .map_err(RackError::PortError)?;
-        input.set_consumer(consumer).map_err(RackError::PortError)?;
+        Ports::connect(output, input, buffer_size).map_err(RackError::PortError)?;
 
         // keep track of connections
         self.connections.push(connection);
@@ -192,21 +188,9 @@ impl Rack {
             }
 
             instrument
-                .update(time_window, sample_count, instrument_events_by_offset)
+                .update(time_window, sample_count, &instrument_events_by_offset)
                 .map_err(|e| RackError::InstrumentError(e))?;
         }
-
-        // while let Ok(command) = self.command_receiver.try_recv() {
-        //     match command {
-        //         RackCommand::Instrument { id, command } => {
-        //             let instrument = self
-        //                 .instruments
-        //                 .get_mut(id)
-        //                 .expect("Instrument should exist");
-        //             instrument.handle_command(command);
-        //         }
-        //     }
-        // }
 
         Ok(())
     }

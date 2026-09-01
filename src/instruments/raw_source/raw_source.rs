@@ -124,7 +124,7 @@ impl Instrument for RawSource {
         &mut self,
         time_window: u128,
         sample_count: u32,
-        events: HashMap<u32, Vec<&RackEvent>>,
+        events: &HashMap<u32, Vec<&RackEvent>>,
     ) -> Result<(), InstrumentError> {
         for sample_offset in 0..sample_count {
             self.handle_events_at_sample(sample_offset, &events);

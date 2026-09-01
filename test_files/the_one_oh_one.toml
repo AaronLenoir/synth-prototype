@@ -1,0 +1,13 @@
+[rack]
+
+[[instruments]]
+type="TheOneOhOne"
+name="synth1"
+
+# [source instrument, source port, target instrument, target port]
+[connections]
+endpoints = [
+    # MAIN AUDIO OUT
+    ["synth1", "OUT_LEFT", "__AUDIO_OUT", "IN_LEFT" ],
+    ["synth1", "OUT_RIGHT", "__AUDIO_OUT", "IN_RIGHT" ],
+]

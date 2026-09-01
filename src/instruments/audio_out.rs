@@ -82,7 +82,7 @@ impl Instrument for AudioOut {
         &mut self,
         time_window: u128,
         sample_count: u32,
-        events: HashMap<u32, Vec<&RackEvent>>,
+        events: &HashMap<u32, Vec<&RackEvent>>,
     ) -> Result<(), InstrumentError> {
         // read from the input ports, write to the internal buffer which will be read by
         // cpal's "move"

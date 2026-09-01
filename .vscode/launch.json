@@ -15,7 +15,7 @@
                     "--bin=synth-prototype"
                 ]
             },
-            "args": ["test_files/mixer_two_channels.toml",]
+            "args": ["test_files/the_one_oh_one.toml",]
         },
         {
             "name": "Debug unit tests in executable 'synth-prototype'",

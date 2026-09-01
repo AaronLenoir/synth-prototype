@@ -153,7 +153,7 @@ impl Instrument for Mixer {
         &mut self,
         _time_window: u128,
         sample_count: u32,
-        events: HashMap<u32, Vec<&RackEvent>>,
+        events: &HashMap<u32, Vec<&RackEvent>>,
     ) -> Result<(), InstrumentError> {
         let name = self.info.name().to_owned();
         for sample_offset in 0..sample_count {

@@ -8,10 +8,12 @@ use crate::{
         instrument::instrument::Instrument,
     },
     instruments::{
-        mixer::channel_parameters::ChannelParameters,
-        mixer::mixer::Mixer as MixerInstrument,
-        mixer::mixer::MixerParameters as MixerInstrumentParameters,
+        mixer::{
+            channel_parameters::ChannelParameters,
+            mixer::{Mixer as MixerInstrument, MixerParameters as MixerInstrumentParameters},
+        },
         raw_source::{self, raw_source::RawSource},
+        the_one_o_one::the_one_o_one::TheOneOhOne,
     },
 };
 
@@ -66,6 +68,9 @@ pub enum InstrumentConfig {
         name: String,
         parameters: RawSourceParameters,
     },
+    TheOneOhOne {
+        name: String,
+    },
 }
 
 /// Instrument specific logic for InstrumentConfig
@@ -90,6 +95,7 @@ impl InstrumentConfig {
                 parameters.waveform,
                 parameters.fm_depth,
             )),
+            InstrumentConfig::TheOneOhOne { name } => Box::new(TheOneOhOne::new(name)),
         }
     }
 
@@ -100,6 +106,7 @@ impl InstrumentConfig {
         match self {
             InstrumentConfig::Mixer { name, .. } => name,
             InstrumentConfig::RawSource { name, .. } => name,
+            InstrumentConfig::TheOneOhOne { name, .. } => name,
         }
     }
 
@@ -136,6 +143,12 @@ impl InstrumentConfig {
                 "f" | "frequency" => Ok(raw_source::raw_source::RawSourceParameters::FREQUENCY),
                 "w" | "waveform" => Ok(raw_source::raw_source::RawSourceParameters::WAVEFORM),
                 "fm_depth" => Ok(raw_source::raw_source::RawSourceParameters::FM_DEPTH),
+                _ => Err(InstrumentConfigError::UnknownParameter(
+                    parameter_name.to_string(),
+                )),
+            },
+            InstrumentConfig::TheOneOhOne { name: _ } => match parameter_name {
+                // No parameters yet
                 _ => Err(InstrumentConfigError::UnknownParameter(
                     parameter_name.to_string(),
                 )),
