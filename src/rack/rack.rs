@@ -48,7 +48,7 @@ pub struct Rack {
     instrument_id_map: HashMap<String, InstrumentId>,
     connections: Vec<Connection>,
     connection_order: ConnectionOrder,
-    audio_device: AudioDevice,
+    audio_device: Option<AudioDevice>,
     pub sample_rate: u32,
 }
 
@@ -77,7 +77,23 @@ impl Rack {
             instrument_id_map: instrument_id_map,
             connections: Vec::new(),
             connection_order: ConnectionOrder::new(&vec![]),
-            audio_device: audio_device,
+            audio_device: Some(audio_device),
+            sample_rate: sample_rate,
+        }
+    }
+
+    /// Creates a Rack with no default audio out device, for internal use
+    /// to combine instruments
+    /// Because there is no audio out device the sample rate must be provided
+    pub fn without_audio_out(sample_rate: u32) -> Self {
+        let instrument_id_map: HashMap<String, InstrumentId> = HashMap::new();
+        let instruments: SlotMap<InstrumentId, Box<dyn Instrument + 'static>> = SlotMap::with_key();
+        Self {
+            instruments: instruments,
+            instrument_id_map: instrument_id_map,
+            connections: Vec::new(),
+            connection_order: ConnectionOrder::new(&vec![]),
+            audio_device: None,
             sample_rate: sample_rate,
         }
     }
@@ -89,16 +105,25 @@ impl Rack {
     }
 
     pub fn play(&mut self) {
-        self.audio_device.play();
+        if self.audio_device.is_some() {
+            self.audio_device
+                .as_mut()
+                .expect("this rack does not have an audio device")
+                .play();
+        }
     }
 
     // add instrument
-    pub fn add_instrument(&mut self, instrument: Box<dyn Instrument>) -> Result<(), RackError> {
+    pub fn add_instrument(&mut self, mut instrument: Box<dyn Instrument>) -> Result<(), RackError> {
         let instrument_name = instrument.info().name().to_string();
 
         if self.instrument_id_map.get(&instrument_name).is_some() {
             return Err(RackError::InstrumentNameAlreadyExists);
         }
+
+        instrument
+            .initialize(self.sample_rate)
+            .map_err(|e| RackError::InstrumentError(e))?;
 
         let id = self.instruments.insert(instrument);
         self.instrument_id_map

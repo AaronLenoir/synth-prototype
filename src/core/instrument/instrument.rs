@@ -20,6 +20,11 @@ pub trait Instrument: PortResolver {
     fn info(&self) -> &InstrumentInfo;
     fn ports(&mut self) -> &mut InstrumentPorts;
 
+    fn initialize(&mut self, sample_rate: u32) -> Result<(), InstrumentError> {
+        // Do nothing by default ...
+        Ok(())
+    }
+
     /// The update function is called every iteration of the update loop
     /// this function is performance critical as it calls many time and needs
     /// to finish in time to avoid delays in the audio output
