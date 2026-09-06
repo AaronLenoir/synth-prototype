@@ -129,11 +129,13 @@ impl Instrument for TheOneOhOne {
     }
 
     fn initialize(&mut self, sample_rate: u32) -> Result<(), InstrumentError> {
+        // Create an empty rack
         let mut rack = Rack::without_audio_out(sample_rate);
 
+        // Create the necessary internal instruments
         let osc1 = RawSource::new("osc1", 440.0, 1, 0.0);
-        let osc2 = RawSource::new("osc2", 440.0, 0, 0.0);
-        let mut mixer = Mixer::new(
+        let osc2 = RawSource::new("osc2", 441.0, 1, 0.0);
+        let mixer = Mixer::new(
             "osc_mixer",
             2,
             (1.0, 1.0),
@@ -143,28 +145,24 @@ impl Instrument for TheOneOhOne {
             ],
         );
 
-        // Connect mixer output to our internal input ports
-        let internal_in_left = self
-            .ports
-            .input_port_mut(TheOneOhOnePorts::INTERNAL_IN_LEFT);
-        let mixer_out_left = mixer.ports().output_port_mut(MixerOutPorts::OUT_LEFT);
-        Ports::connect(mixer_out_left, internal_in_left, sample_rate as usize * 2).expect("TBD");
-
-        let internal_in_right = self
-            .ports
-            .input_port_mut(TheOneOhOnePorts::INTERNAL_IN_RIGHT);
-        let mixer_out_right = mixer.ports().output_port_mut(MixerOutPorts::OUT_RIGHT);
-        Ports::connect(mixer_out_right, internal_in_right, sample_rate as usize * 2).expect("TBD");
-
-        let (mixer_in_left, mixer_in_right) = (
+        // We ask the PortId's of the mixer before we add the mixer to the rack
+        // because at that time we lose ownership
+        let (mixer_1_left, mixer_1_right, mixer_2_left, mixer_2_right) = (
             mixer
                 .input_port("IN_LEFT.1")
                 .expect("mixer missing port IN_LEFT.1"),
             mixer
                 .input_port("IN_RIGHT.1")
                 .expect("mixer missing port IN_RIGHT.1"),
+            mixer
+                .input_port("IN_LEFT.2")
+                .expect("mixer missing port IN_LEFT.2"),
+            mixer
+                .input_port("IN_RIGHT.2")
+                .expect("mixer missing port IN_RIGHT.2"),
         );
 
+        // now add the instruments BEFORE we can connect them (the rack needs to know them)
         rack.add_instrument(Box::new(osc1))
             .expect("cannot add instrument");
         rack.add_instrument(Box::new(osc2))
@@ -172,32 +170,59 @@ impl Instrument for TheOneOhOne {
         rack.add_instrument(Box::new(mixer))
             .expect("cannot add instrument");
 
-        rack.connect(Connection {
-            source: EndPoint {
-                instrument_name: "osc1".to_string(),
-                port: RawSourcePorts::OUT_LEFT,
-            },
-            target: EndPoint {
-                instrument_name: "osc_mixer".to_string(),
-                port: mixer_in_left,
-            },
-        })
+        // Connect mixer output to our internal input ports
+        let internal_in_left = self
+            .ports
+            .input_port_mut(TheOneOhOnePorts::INTERNAL_IN_LEFT);
+
+        rack.connect_external("osc_mixer", MixerOutPorts::OUT_LEFT, internal_in_left)
+            .map_err(|e| {
+                InstrumentError::GeneralError(format!(
+                    "Could not connect synth to internal mixer: {:?}",
+                    e
+                ))
+            })?;
+
+        let internal_in_right = self
+            .ports
+            .input_port_mut(TheOneOhOnePorts::INTERNAL_IN_RIGHT);
+
+        rack.connect_external("osc_mixer", MixerOutPorts::OUT_RIGHT, internal_in_right)
+            .map_err(|e| {
+                InstrumentError::GeneralError(format!(
+                    "Could not connect synth to internal mixer: {:?}",
+                    e
+                ))
+            })?;
+
+        rack.connect_direct("osc1", RawSourcePorts::OUT_LEFT, "osc_mixer", mixer_1_left)
+            .map_err(|e| {
+                InstrumentError::GeneralError(format!("Could not connect osc1 to mixer: {:?}", e))
+            })?;
+
+        rack.connect_direct(
+            "osc1",
+            RawSourcePorts::OUT_RIGHT,
+            "osc_mixer",
+            mixer_1_right,
+        )
         .map_err(|e| {
             InstrumentError::GeneralError(format!("Could not connect osc1 to mixer: {:?}", e))
         })?;
 
-        rack.connect(Connection {
-            source: EndPoint {
-                instrument_name: "osc1".to_string(),
-                port: RawSourcePorts::OUT_RIGHT,
-            },
-            target: EndPoint {
-                instrument_name: "osc_mixer".to_string(),
-                port: mixer_in_right,
-            },
-        })
+        rack.connect_direct("osc2", RawSourcePorts::OUT_LEFT, "osc_mixer", mixer_2_left)
+            .map_err(|e| {
+                InstrumentError::GeneralError(format!("Could not connect osc2 to mixer: {:?}", e))
+            })?;
+
+        rack.connect_direct(
+            "osc2",
+            RawSourcePorts::OUT_RIGHT,
+            "osc_mixer",
+            mixer_2_right,
+        )
         .map_err(|e| {
-            InstrumentError::GeneralError(format!("Could not connect osc1 to mixer: {:?}", e))
+            InstrumentError::GeneralError(format!("Could not connect osc2 to mixer: {:?}", e))
         })?;
 
         self.internal_rack = Some(rack);

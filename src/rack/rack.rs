@@ -11,11 +11,16 @@ use crate::{
     core::{
         audio_device::AudioDevice,
         commands::RackCommand,
-        instrument::{instrument::Instrument, instrument_error::InstrumentError},
-        port::{PortError, Ports},
+        instrument::{
+            instrument::Instrument, instrument_error::InstrumentError, instrument_ports::PortId,
+        },
+        port::{InputPort, PortError, Ports},
     },
     instruments::audio_out::{AudioOut, AudioOutPorts},
-    rack::{connection::Connection, connection_order::ConnectionOrder},
+    rack::{
+        connection::{Connection, EndPoint},
+        connection_order::ConnectionOrder,
+    },
     sequencer::{event::RackEvent, sample_offset::SampleOffset},
 };
 
@@ -132,6 +137,25 @@ impl Rack {
         Ok(())
     }
 
+    pub fn connect_direct(
+        &mut self,
+        source_name: &str,
+        source_port: PortId,
+        target_name: &str,
+        target_port: PortId,
+    ) -> Result<(), RackError> {
+        self.connect(Connection {
+            source: EndPoint {
+                instrument_name: source_name.to_string(),
+                port: source_port,
+            },
+            target: EndPoint {
+                instrument_name: target_name.to_string(),
+                port: target_port,
+            },
+        })
+    }
+
     pub fn connect(&mut self, connection: Connection) -> Result<(), RackError> {
         let buffer_size = (self.sample_rate as usize) * 2; // 2 seconds
 
@@ -151,6 +175,23 @@ impl Rack {
 
         // re-order the connections
         self.connection_order = ConnectionOrder::new(&self.connections);
+
+        Ok(())
+    }
+
+    pub fn connect_external(
+        &mut self,
+        source_name: &str,
+        source_port: PortId,
+        external_port: &mut InputPort,
+    ) -> Result<(), RackError> {
+        let buffer_size = (self.sample_rate as usize) * 2; // 2 seconds
+
+        let source = self.instrument(source_name)?;
+
+        let output = source.ports().output_port_mut(source_port);
+
+        Ports::connect(output, external_port, buffer_size).map_err(RackError::PortError)?;
 
         Ok(())
     }
