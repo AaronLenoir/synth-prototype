@@ -2,28 +2,22 @@ use std::collections::HashMap;
 
 use crate::{
     core::{
+        commands::{InstrumentCommand, ParameterId},
         instrument::{
             instrument::Instrument,
             instrument_error::InstrumentError,
             instrument_info::InstrumentInfo,
             instrument_ports::{InstrumentPorts, PortId, PortResolver},
         },
-        port::Ports,
     },
     instruments::{
         mixer::{
             channel_parameters::ChannelParameters,
             mixer::{Mixer, MixerOutPorts},
         },
-        raw_source::{
-            raw_source::{RawSource, RawSourcePorts},
-            waveform::Waveform,
-        },
+        raw_source::raw_source::{RawSource, RawSourceParameters, RawSourcePorts},
     },
-    rack::{
-        connection::{Connection, EndPoint},
-        rack::{Rack, RackError},
-    },
+    rack::rack::Rack,
     sequencer::event::RackEvent,
 };
 
@@ -44,6 +38,13 @@ impl TheOneOhOnePorts {
     pub const OUT_RIGHT: PortId = 1;
     pub const INTERNAL_IN_LEFT: PortId = 0;
     pub const INTERNAL_IN_RIGHT: PortId = 1;
+}
+
+// Define the Parameters
+pub struct TheOneOhOneParameters;
+
+impl TheOneOhOneParameters {
+    pub const FREQUENCY: ParameterId = ParameterId(1);
 }
 
 pub const __OSC1: u32 = 0;
@@ -72,63 +73,40 @@ impl PortResolver for TheOneOhOne {
 
 impl TheOneOhOne {
     pub fn new(name: &str) -> Self {
-        // let mut ports = InstrumentPorts::new(2, 2);
-
-        // let mut osc1 = RawSource::new("osc1", 440.0, 1, 0.0);
-        // let osc2 = RawSource::new("osc1", 440.0, 0, 0.0);
-        // let mut mixer = Mixer::new(
-        //     "osc_mixer",
-        //     2,
-        //     (1.0, 1.0),
-        //     vec![
-        //         ChannelParameters::new(0.5, 0.0),
-        //         ChannelParameters::new(0.5, 0.0),
-        //     ],
-        // );
-
-        // // connect osc1 outputs to mixer channel 1 inputs
-        // let in_left_id = mixer.input_port("IN_LEFT.1").expect("TBD");
-        // let in_right_id = mixer.input_port("IN_RIGHT.1").expect("TBD");
-
-        // let in_left = mixer.ports().input_port_mut(in_left_id);
-        // let out_left = osc1.ports().output_port_mut(RawSourcePorts::OUT_LEFT);
-        // Ports::connect(out_left, in_left, 48000 * 2).expect("TBD"); // TODO: would need to know the bitrate here
-
-        // let in_right = mixer.ports().input_port_mut(in_right_id);
-        // let out_right = osc1.ports().output_port_mut(RawSourcePorts::OUT_RIGHT);
-        // Ports::connect(out_right, in_right, 48000 * 2).expect("TBD"); // TODO: would need to know the bitrate here
-
-        // // Connect mixer output to our internal input ports
-        // let internal_in_left = ports.input_port_mut(TheOneOhOnePorts::INTERNAL_IN_LEFT);
-        // let mixer_out_left = mixer.ports().output_port_mut(MixerOutPorts::OUT_LEFT);
-        // Ports::connect(mixer_out_left, internal_in_left, 48000 * 2).expect("TBD");
-
-        // let internal_in_right = ports.input_port_mut(TheOneOhOnePorts::INTERNAL_IN_RIGHT);
-        // let mixer_out_right = mixer.ports().output_port_mut(MixerOutPorts::OUT_RIGHT);
-        // Ports::connect(mixer_out_right, internal_in_right, 48000 * 2).expect("TBD");
-
-        // let mut internal_instruments: HashMap<u32, Box<dyn Instrument>> = HashMap::new();
-        // internal_instruments.insert(__OSC1, Box::new(osc1));
-        // internal_instruments.insert(__OSC_MIXER, Box::new(mixer));
-
         Self {
             info: InstrumentInfo::new(name),
             ports: InstrumentPorts::new(2, 2),
             internal_rack: None,
         }
     }
-}
 
-impl Instrument for TheOneOhOne {
-    fn info(&self) -> &InstrumentInfo {
-        &self.info
+    fn get_sample_from_input(&mut self, port: PortId) -> Result<f32, InstrumentError> {
+        let sample = match port {
+            TheOneOhOnePorts::OUT_LEFT => {
+                let name = self.info.name().to_owned();
+                let in_left = self
+                    .ports()
+                    .input_port_mut(TheOneOhOnePorts::INTERNAL_IN_LEFT);
+                in_left
+                    .read_if_connected()
+                    .map_err(|e| InstrumentError::from_port_error(&name, e))?
+            }
+            TheOneOhOnePorts::OUT_RIGHT => {
+                let name = self.info.name().to_owned();
+                let in_right = self
+                    .ports()
+                    .input_port_mut(TheOneOhOnePorts::INTERNAL_IN_RIGHT);
+                in_right
+                    .read_if_connected()
+                    .map_err(|e| InstrumentError::from_port_error(&name, e))?
+            }
+            _ => 0.0,
+        };
+
+        Ok(sample)
     }
 
-    fn ports(&mut self) -> &mut InstrumentPorts {
-        &mut self.ports
-    }
-
-    fn initialize(&mut self, sample_rate: u32) -> Result<(), InstrumentError> {
+    fn build_rack(&self, sample_rate: u32) -> Rack {
         // Create an empty rack
         let mut rack = Rack::without_audio_out(sample_rate);
 
@@ -144,6 +122,35 @@ impl Instrument for TheOneOhOne {
                 ChannelParameters::new(0.5, 0.0),
             ],
         );
+
+        // now add the instruments BEFORE we can connect them (the rack needs to know them)
+        rack.add_instrument(Box::new(osc1))
+            .expect("cannot add instrument");
+        rack.add_instrument(Box::new(osc2))
+            .expect("cannot add instrument");
+        rack.add_instrument(Box::new(mixer))
+            .expect("cannot add instrument");
+
+        rack
+    }
+}
+
+impl Instrument for TheOneOhOne {
+    fn info(&self) -> &InstrumentInfo {
+        &self.info
+    }
+
+    fn ports(&mut self) -> &mut InstrumentPorts {
+        &mut self.ports
+    }
+
+    fn initialize(&mut self, sample_rate: u32) -> Result<(), InstrumentError> {
+        // Create an empty rack
+        let mut rack = self.build_rack(sample_rate);
+
+        let mut mixer = rack.instrument("osc_mixer");
+
+        let mixer = mixer.as_mut().expect("missing osc_mixer instrument");
 
         // We ask the PortId's of the mixer before we add the mixer to the rack
         // because at that time we lose ownership
@@ -161,14 +168,6 @@ impl Instrument for TheOneOhOne {
                 .input_port("IN_RIGHT.2")
                 .expect("mixer missing port IN_RIGHT.2"),
         );
-
-        // now add the instruments BEFORE we can connect them (the rack needs to know them)
-        rack.add_instrument(Box::new(osc1))
-            .expect("cannot add instrument");
-        rack.add_instrument(Box::new(osc2))
-            .expect("cannot add instrument");
-        rack.add_instrument(Box::new(mixer))
-            .expect("cannot add instrument");
 
         // Connect mixer output to our internal input ports
         let internal_in_left = self
@@ -236,37 +235,21 @@ impl Instrument for TheOneOhOne {
         sample_count: u32,
         events: &HashMap<u32, Vec<&RackEvent>>,
     ) -> Result<(), InstrumentError> {
-        self.internal_rack
-            .as_mut()
-            .expect("missing internal rack")
-            .update(time_window, sample_count, vec![])
-            .expect("update failed");
+        let one_sample_window = time_window / sample_count as u128;
 
         for sample_offset in 0..sample_count {
+            // we can only update the rack one sample at a time because we need to properly
+            // handle events that may alter the instrument parameters at any moment in the window?
+            self.internal_rack
+                .as_mut()
+                .expect("missing internal rack")
+                .update(one_sample_window, 1, vec![])
+                .expect("update failed");
+
             self.handle_events_at_sample(sample_offset, events);
 
             for port in [TheOneOhOnePorts::OUT_LEFT, TheOneOhOnePorts::OUT_RIGHT] {
-                let sample = match port {
-                    TheOneOhOnePorts::OUT_LEFT => {
-                        let name = self.info.name().to_owned();
-                        let in_left = self
-                            .ports()
-                            .input_port_mut(TheOneOhOnePorts::INTERNAL_IN_LEFT);
-                        in_left
-                            .read_if_connected()
-                            .map_err(|e| InstrumentError::from_port_error(&name, e))?
-                    }
-                    TheOneOhOnePorts::OUT_RIGHT => {
-                        let name = self.info.name().to_owned();
-                        let in_right = self
-                            .ports()
-                            .input_port_mut(TheOneOhOnePorts::INTERNAL_IN_RIGHT);
-                        in_right
-                            .read_if_connected()
-                            .map_err(|e| InstrumentError::from_port_error(&name, e))?
-                    }
-                    _ => 0.0,
-                };
+                let sample = self.get_sample_from_input(port)?;
                 let name = self.info.name().to_owned();
                 let output = self.ports.output_port_mut(port);
 
@@ -277,5 +260,37 @@ impl Instrument for TheOneOhOne {
         }
 
         Ok(())
+    }
+
+    fn handle_command(&mut self, command: crate::core::commands::InstrumentCommand) {
+        match command {
+            crate::core::commands::InstrumentCommand::Set(
+                TheOneOhOneParameters::FREQUENCY,
+                value,
+            ) => {
+                if self.internal_rack.is_none() {
+                    return;
+                }
+                self.internal_rack
+                    .as_mut()
+                    .expect("")
+                    .instrument("osc1")
+                    .expect("osc1 missing")
+                    .handle_command(InstrumentCommand::Set(
+                        RawSourceParameters::FREQUENCY,
+                        value,
+                    ));
+                self.internal_rack
+                    .as_mut()
+                    .expect("")
+                    .instrument("osc2")
+                    .expect("osc1 missing")
+                    .handle_command(InstrumentCommand::Set(
+                        RawSourceParameters::FREQUENCY,
+                        value * 0.80,
+                    ));
+            }
+            _ => {}
+        }
     }
 }

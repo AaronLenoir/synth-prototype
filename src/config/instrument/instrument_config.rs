@@ -13,7 +13,7 @@ use crate::{
             mixer::{Mixer as MixerInstrument, MixerParameters as MixerInstrumentParameters},
         },
         raw_source::{self, raw_source::RawSource},
-        the_one_o_one::the_one_o_one::TheOneOhOne,
+        the_one_o_one::{self, the_one_o_one::TheOneOhOne},
     },
 };
 
@@ -148,7 +148,9 @@ impl InstrumentConfig {
                 )),
             },
             InstrumentConfig::TheOneOhOne { name: _ } => match parameter_name {
-                // No parameters yet
+                "f" | "frequency" => {
+                    Ok(the_one_o_one::the_one_o_one::TheOneOhOneParameters::FREQUENCY)
+                }
                 _ => Err(InstrumentConfigError::UnknownParameter(
                     parameter_name.to_string(),
                 )),

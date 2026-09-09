@@ -11,3 +11,46 @@ endpoints = [
     ["synth1", "OUT_LEFT", "__AUDIO_OUT", "IN_LEFT" ],
     ["synth1", "OUT_RIGHT", "__AUDIO_OUT", "IN_RIGHT" ],
 ]
+
+[sequencer]
+tempo=120
+meter={ numerator = 3, denominator = 4 }
+
+[[sequencer.clips]]
+start={ bar = 1, beat = 1, offset = 0.0 }
+end={ bar = 9, beat = 2, offset = 0.0 } 
+target = "synth1"
+
+[sequencer.clips.pattern]
+period = 1
+command = "set"
+events = [
+    { parameter = "frequency", value = 392.00 },
+    { },
+    { parameter = "frequency", value = 440.00 },
+    { parameter = "frequency", value = 392.00 },
+    { parameter = "frequency", value = 523.25 },
+    { parameter = "frequency", value = 493.88 },
+
+    { parameter = "frequency", value = 392.00 },
+    { },
+    { parameter = "frequency", value = 440.00 },
+    { parameter = "frequency", value = 392.00 },
+    { parameter = "frequency", value = 587.33 },
+    { parameter = "frequency", value = 523.25 },
+
+    { parameter = "frequency", value = 392.00 },
+    { },
+    { parameter = "frequency", value = 784.00 },
+    { parameter = "frequency", value = 659.26 },
+    { parameter = "frequency", value = 523.25 },
+    { parameter = "frequency", value = 493.88 },
+    { parameter = "frequency", value = 440.00 },
+
+    { parameter = "frequency", value = 698.46 },
+    { },
+    { parameter = "frequency", value = 659.26 },
+    { parameter = "frequency", value = 523.25 },
+    { parameter = "frequency", value = 587.33 },
+    { parameter = "frequency", value = 523.25 },
+]
