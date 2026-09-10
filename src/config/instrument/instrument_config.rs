@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 use crate::{
     core::{
-        commands::{InstrumentCommand, ParameterId},
+        commands::{InstrumentCommand, NoteNumber, ParameterId, Velocity},
         instrument::instrument::Instrument,
     },
     instruments::{
@@ -205,6 +205,26 @@ impl InstrumentConfig {
                 Ok(InstrumentCommand::Set(
                     self.map_parameter_id(parameter)?,
                     value as f32,
+                ))
+            }
+            "note" => {
+                let note = parameters["note"].as_integer().ok_or_else(|| {
+                    InstrumentConfigError::MissingCommandParameter(
+                        "note".to_string(),
+                        "note".to_string(),
+                    )
+                })?;
+
+                let velocity = parameters["velocity"].as_float().ok_or_else(|| {
+                    InstrumentConfigError::MissingCommandParameter(
+                        "note_on".to_string(),
+                        "velocity".to_string(),
+                    )
+                })?;
+
+                Ok(InstrumentCommand::Note(
+                    NoteNumber(note as u32),
+                    Velocity(velocity as f32),
                 ))
             }
             _ => Err(InstrumentConfigError::UnknownCommand(name.to_string())),

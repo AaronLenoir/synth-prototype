@@ -290,6 +290,33 @@ impl Instrument for TheOneOhOne {
                         value * 0.80,
                     ));
             }
+            crate::core::commands::InstrumentCommand::Note(note, velocity) => {
+                if velocity.0 > 0.0 {
+                    // Note on
+                    // Here, set the frequency according to the note
+                    // initialise the envelope
+                    self.internal_rack
+                        .as_mut()
+                        .expect("")
+                        .instrument("osc1")
+                        .expect("osc1 missing")
+                        .handle_command(InstrumentCommand::Set(
+                            RawSourceParameters::FREQUENCY,
+                            800.0,
+                        ));
+                } else {
+                    // Here set the envelop to release
+                    self.internal_rack
+                        .as_mut()
+                        .expect("")
+                        .instrument("osc1")
+                        .expect("osc1 missing")
+                        .handle_command(InstrumentCommand::Set(
+                            RawSourceParameters::FREQUENCY,
+                            1.0,
+                        ));
+                }
+            }
             _ => {}
         }
     }
