@@ -5,7 +5,7 @@ use crate::{
 };
 
 /// The position within the score expressed in bar, beat and beat offset
-#[derive(Deserialize, PartialEq, Debug, Clone, Copy)]
+#[derive(Deserialize, Default, PartialEq, Debug, Clone, Copy)]
 pub struct MusicalPosition {
     /// Bar number in the score.
     pub bar: u32,

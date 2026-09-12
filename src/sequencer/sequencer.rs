@@ -110,7 +110,8 @@ mod clip_tests {
         rack::rack::InstrumentId,
         sequencer::{
             clip::Clip, duration::Duration, meter::Meter, pattern::Pattern, sequencer::Sequencer,
-            timeline_position::TimelinePosition, timeline_range::TimelineRange,
+            timed_command::TimedCommand, timeline_position::TimelinePosition,
+            timeline_range::TimelineRange,
         },
     };
 
@@ -146,6 +147,38 @@ mod clip_tests {
                 period: Duration::new(1.0),
                 commands: vec![InstrumentCommand::Set(ParameterId(1), 100.0)],
             },
+            vec![],
+        )
+    }
+
+    fn get_clip_single_note_on_off(
+        range: TimelineRange,
+        on_time: TimelinePosition,
+        off_time: TimelinePosition,
+    ) -> Clip {
+        Clip::new(
+            range,
+            get_dummy_instrument_id(),
+            Pattern {
+                period: Duration::new(0.0),
+                commands: vec![],
+            },
+            vec![
+                TimedCommand {
+                    start: on_time,
+                    command: InstrumentCommand::Note(
+                        crate::core::commands::NoteNumber(32),
+                        crate::core::commands::Velocity(0.5),
+                    ),
+                },
+                TimedCommand {
+                    start: off_time,
+                    command: InstrumentCommand::Note(
+                        crate::core::commands::NoteNumber(32),
+                        crate::core::commands::Velocity(0.0),
+                    ),
+                },
+            ],
         )
     }
 
@@ -168,6 +201,35 @@ mod clip_tests {
         let events = sut.step(1_000_000_000, 1000).expect("unexpected error");
 
         // After 1 second, our pattern should've produced two events, we should see them on the channel
+        assert_eq!(2, events.len());
+    }
+
+    #[test]
+    fn notes_at_interval() {
+        let mut sequencer = Sequencer::new(
+            120,
+            Meter {
+                numerator: 4,
+                denominator: 4,
+            },
+        );
+
+        sequencer.add_clip(get_clip_single_note_on_off(
+            TimelineRange {
+                start: TimelinePosition::new(0.0),
+                end: TimelinePosition::new(10.0),
+            },
+            TimelinePosition::new(0.0),
+            TimelinePosition::new(1.0),
+        ));
+
+        sequencer.play();
+
+        let events = sequencer
+            .step(1_000_000_000, 1000)
+            .expect("unexpected error");
+
+        // After 1 second, we expect two note events
         assert_eq!(2, events.len());
     }
 }

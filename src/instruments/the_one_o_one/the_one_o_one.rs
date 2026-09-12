@@ -294,7 +294,10 @@ impl Instrument for TheOneOhOne {
                 if velocity.0 > 0.0 {
                     // Note on
                     // Here, set the frequency according to the note
+                    //   maybe: let f = self.oscilator1.map_note_to_frequency(note)
+                    //     (the oscilator config object can keep that logic, including settings like transpose I dunno)
                     // initialise the envelope
+                    //   maybe: self.envelope.reset()
                     self.internal_rack
                         .as_mut()
                         .expect("")
@@ -306,6 +309,7 @@ impl Instrument for TheOneOhOne {
                         ));
                 } else {
                     // Here set the envelop to release
+                    //   maybe: self.envelope.release()
                     self.internal_rack
                         .as_mut()
                         .expect("")

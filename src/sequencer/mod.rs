@@ -6,5 +6,6 @@ pub mod pattern;
 pub mod sample_offset;
 pub mod sequencer;
 pub mod sequencer_error;
+pub mod timed_command;
 pub mod timeline_position;
 pub mod timeline_range;

@@ -21,10 +21,20 @@ start={ bar = 1, beat = 1, offset = 0.0 }
 end={ bar = 9, beat = 2, offset = 0.0 } 
 target = "synth1"
 
-[sequencer.clips.pattern]
-period = 1
-command = "note"
-events = [
-    { note = 32, velocity = 0.5 },
-    { note = 32, velocity = 0.0 },
-]
+[[sequencer.clips.notes]]
+note = 32
+velocity = 0.5
+start = { bar = 1, beat = 1, offset = 0.0 }
+end = { bar = 1, beat = 2, offset = 0.0 }
+
+[[sequencer.clips.notes]]
+note = 32
+velocity = 0.5
+start = { bar = 2, beat = 1, offset = 0.0 }
+end = { bar = 3, beat = 1, offset = 0.0 }
+
+[[sequencer.clips.notes]]
+note = 32
+velocity = 0.5
+start = { bar = 4, beat = 1, offset = 0.0 }
+end = { bar = 4, beat = 1, offset = 0.125 }

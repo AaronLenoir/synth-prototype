@@ -1,12 +1,15 @@
+use core::time;
+
 use crate::{
     config::{
         config::Config, config_error::ConfigError,
         instrument::instrument_config::InstrumentConfigError, sequencer::clip_config::ClipConfig,
     },
+    core::commands::InstrumentCommand::Note,
     rack::rack::{Rack, RackError},
     sequencer::{
         clip::Clip, duration::Duration, meter::Meter, pattern::Pattern, sequencer::Sequencer,
-        timeline_range::TimelineRange,
+        timed_command::TimedCommand, timeline_range::TimelineRange,
     },
 };
 
@@ -68,7 +71,9 @@ impl SequencerBuilder {
 
         let pattern = Self::create_pattern(config, clip_config)?;
 
-        sequencer.add_clip(Clip::new(range, target, pattern));
+        let timed_commands = Self::create_timed_commands(config, clip_config)?;
+
+        sequencer.add_clip(Clip::new(range, target, pattern, timed_commands));
 
         Ok(())
     }
@@ -95,6 +100,43 @@ impl SequencerBuilder {
             period: Duration::new(clip_config.pattern.period),
             commands: commands,
         })
+    }
+
+    fn create_timed_commands(
+        config: &Config,
+        clip_config: &ClipConfig,
+    ) -> Result<Vec<TimedCommand>, SequencerBuilderError> {
+        // get instrument type from the configuration
+        let instrument = config
+            .instrument_config_by_name(&clip_config.target)
+            .map_err(|e| SequencerBuilderError::ConfigError(e))?;
+
+        let mut timed_commands = Vec::new();
+
+        for note in clip_config.notes.iter() {
+            let note_on_time = note.start.into_timeline_position(config.sequencer.meter);
+            let note_off_time = note.end.into_timeline_position(config.sequencer.meter);
+            let note_on = Note(
+                crate::core::commands::NoteNumber(note.note),
+                crate::core::commands::Velocity(note.velocity),
+            );
+            let note_off = Note(
+                crate::core::commands::NoteNumber(note.note),
+                crate::core::commands::Velocity(0.0),
+            );
+
+            timed_commands.push(TimedCommand {
+                start: note_on_time,
+                command: note_on,
+            });
+
+            timed_commands.push(TimedCommand {
+                start: note_off_time,
+                command: note_off,
+            });
+        }
+
+        Ok(timed_commands)
     }
 }
 

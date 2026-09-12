@@ -78,7 +78,7 @@ mod config_tests {
         rack::connection_config::EndPointConfig,
         sequencer::{
             clip_config::ClipConfig, meter_config::MeterConfig, musical_position::MusicalPosition,
-            pattern_config::PatternConfig,
+            notes_config::NotesConfig, pattern_config::PatternConfig,
         },
     };
 
@@ -309,6 +309,143 @@ mod config_tests {
                         ]),
                     ],
                 },
+                notes: vec![],
+            }
+        );
+    }
+
+    #[test]
+    fn from_str_parses_clips_pattern_is_optional() {
+        let sut = Config::from_str(
+            r#"
+        [rack]
+        
+        [[instruments]]
+        type="Mixer"
+        name="mixer1"
+        [instruments.parameters]
+        channels=1
+        master_gain=[1.0, 1.0]
+        [[instruments.parameters.channel_parameters]]
+        gain=1.0
+        balance=0.0
+
+        [sequencer]
+        tempo=120
+        meter={ numerator = 4, denominator = 4 }
+
+        [[sequencer.clips]]
+        start={ bar = 1, beat = 1, offset = 0.0 }
+        end={ bar = 2, beat = 1, offset = 0.0 } 
+        target = "mixer1"
+
+        "#,
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn from_str_parses_sequencer_clips_and_notes() {
+        let sut = Config::from_str(
+            r#"
+        [rack]
+        
+        [[instruments]]
+        type="Mixer"
+        name="mixer1"
+        [instruments.parameters]
+        channels=1
+        master_gain=[1.0, 1.0]
+        [[instruments.parameters.channel_parameters]]
+        gain=1.0
+        balance=0.0
+
+        [sequencer]
+        tempo=120
+        meter={ numerator = 4, denominator = 4 }
+
+        [[sequencer.clips]]
+        start={ bar = 1, beat = 1, offset = 0.0 }
+        end={ bar = 2, beat = 1, offset = 0.0 } 
+        target = "mixer1"
+
+        [[sequencer.clips.notes]]
+        note = 32
+        velocity = 0.5
+        start = { bar = 1, beat = 1, offset = 0.0 }
+        end = { bar = 2, beat = 1, offset = 0.0 }
+
+        [[sequencer.clips.notes]]
+        note = 46
+        velocity = 0.5
+        start = { bar = 2, beat = 1, offset = 0.0 }
+        end = { bar = 3, beat = 1, offset = 0.0 }
+
+        "#,
+        )
+        .unwrap();
+
+        assert_eq!(sut.sequencer.tempo, 120);
+
+        assert_eq!(
+            sut.sequencer.meter,
+            MeterConfig {
+                numerator: 4,
+                denominator: 4
+            }
+        );
+
+        assert_eq!(sut.sequencer.clips.len(), 1);
+
+        assert_eq!(
+            sut.sequencer.clips[0],
+            ClipConfig {
+                start: MusicalPosition {
+                    bar: 1,
+                    beat: 1,
+                    offset: 0.0
+                },
+                end: MusicalPosition {
+                    bar: 2,
+                    beat: 1,
+                    offset: 0.0
+                },
+                target: "mixer1".to_string(),
+                pattern: PatternConfig {
+                    period: 0.0,
+                    command: "".to_string(),
+                    events: vec![]
+                },
+                notes: vec![
+                    NotesConfig {
+                        note: 32,
+                        velocity: 0.5,
+                        start: MusicalPosition {
+                            bar: 1,
+                            beat: 1,
+                            offset: 0.0
+                        },
+                        end: MusicalPosition {
+                            bar: 2,
+                            beat: 1,
+                            offset: 0.0
+                        },
+                    },
+                    NotesConfig {
+                        note: 46,
+                        velocity: 0.5,
+                        start: MusicalPosition {
+                            bar: 2,
+                            beat: 1,
+                            offset: 0.0
+                        },
+                        end: MusicalPosition {
+                            bar: 3,
+                            beat: 1,
+                            offset: 0.0
+                        },
+                    },
+                ]
             }
         );
     }

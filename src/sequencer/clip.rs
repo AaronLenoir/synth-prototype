@@ -1,8 +1,8 @@
 use crate::{
     rack::rack::InstrumentId,
     sequencer::{
-        event::InstrumentEvent, pattern::Pattern, timeline_position::TimelinePosition,
-        timeline_range::TimelineRange,
+        event::InstrumentEvent, pattern::Pattern, timed_command::TimedCommand,
+        timeline_position::TimelinePosition, timeline_range::TimelineRange,
     },
 };
 
@@ -10,23 +10,42 @@ pub struct Clip {
     range: TimelineRange,
     pub target: InstrumentId,
     pattern: Pattern,
+    timed_commands: Vec<TimedCommand>,
 }
 
 impl Clip {
-    pub fn new(range: TimelineRange, target: InstrumentId, pattern: Pattern) -> Self {
+    pub fn new(
+        range: TimelineRange,
+        target: InstrumentId,
+        pattern: Pattern,
+        timed_commands: Vec<TimedCommand>,
+    ) -> Self {
         Self {
             range,
             target,
             pattern,
+            timed_commands,
         }
     }
 
     pub fn commands_between(&self, range: TimelineRange) -> Vec<InstrumentEvent> {
         let mut result = vec![];
 
-        if !self.range.overlaps(&range) || self.pattern.commands.len() == 0 {
+        self.commands_between_from_pattern(&range, &mut result);
+
+        self.commands_between_from_timed_commands(&range, &mut result);
+
+        return result;
+    }
+
+    fn commands_between_from_pattern(
+        &self,
+        range: &TimelineRange,
+        result: &mut Vec<InstrumentEvent>,
+    ) {
+        if !self.range.overlaps(range) || self.pattern.commands.len() == 0 {
             // we are not in the current range so inactive
-            return result;
+            return;
         }
 
         let mut position: TimelinePosition = TimelinePosition::new(self.range.start.value);
@@ -46,8 +65,26 @@ impl Clip {
                 pattern_index = 0;
             }
         }
+    }
 
-        return result;
+    fn commands_between_from_timed_commands(
+        &self,
+        range: &TimelineRange,
+        result: &mut Vec<InstrumentEvent>,
+    ) {
+        if !self.range.overlaps(&range) || self.timed_commands.len() == 0 {
+            // we are not in the current range so inactive
+            return;
+        }
+
+        for timed_command in self.timed_commands.iter() {
+            if range.is_in_range(timed_command.start) {
+                result.push(InstrumentEvent::new(
+                    timed_command.start,
+                    timed_command.command,
+                ));
+            }
+        }
     }
 }
 
@@ -77,6 +114,7 @@ mod clip_tests {
                 period: Duration::new(1.0),
                 commands: vec![InstrumentCommand::Set(ParameterId(1), 100.0)],
             },
+            vec![],
         )
     }
 
@@ -102,6 +140,7 @@ mod clip_tests {
                     InstrumentCommand::Set(ParameterId(1), 1000.0),
                 ],
             },
+            vec![],
         )
     }
 
@@ -253,6 +292,7 @@ mod clip_tests {
                 period: Duration::new(1.0),
                 commands: vec![],
             },
+            vec![],
         );
 
         // one beat

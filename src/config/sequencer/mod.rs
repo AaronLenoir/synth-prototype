@@ -1,5 +1,6 @@
 pub mod clip_config;
 pub mod meter_config;
 pub mod musical_position;
+pub mod notes_config;
 pub mod pattern_config;
 pub mod sequencer_config;
