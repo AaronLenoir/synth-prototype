@@ -2,23 +2,19 @@ use std::collections::HashMap;
 
 use crate::{
     core::{
-        commands::{InstrumentCommand, ParameterId},
-        instrument::{
+        commands::{InstrumentCommand, ParameterId}, instrument::{
             instrument::Instrument,
             instrument_error::InstrumentError,
             instrument_info::InstrumentInfo,
             instrument_ports::{InstrumentPorts, PortId, PortResolver},
-        },
-    },
-    instruments::{
+        }, utils::{envelope::Envelope, smooth_value::SmoothValue},
+    }, instruments::{
         mixer::{
             channel_parameters::ChannelParameters,
             mixer::{Mixer, MixerOutPorts},
         },
         raw_source::raw_source::{RawSource, RawSourceParameters, RawSourcePorts},
-    },
-    rack::rack::Rack,
-    sequencer::event::RackEvent,
+    }, rack::rack::Rack, sequencer::event::RackEvent,
 };
 
 /// Synthesizer 101, a basic synthesizer POC with two oscilators, a mixer,
@@ -28,6 +24,9 @@ pub struct TheOneOhOne {
     ports: InstrumentPorts,
 
     internal_rack: Option<Rack>,
+
+    amp_envelope: Envelope,
+    amp: SmoothValue,
 }
 
 // Define the Ports
@@ -77,6 +76,8 @@ impl TheOneOhOne {
             info: InstrumentInfo::new(name),
             ports: InstrumentPorts::new(2, 2),
             internal_rack: None,
+            amp_envelope: Envelope::new(0, 1_000_000_000, 0.5, 2_000_000_000),
+            amp: SmoothValue::new(0.0),
         }
     }
 
@@ -112,7 +113,7 @@ impl TheOneOhOne {
 
         // Create the necessary internal instruments
         let osc1 = RawSource::new("osc1", 440.0, 1, 0.0);
-        let osc2 = RawSource::new("osc2", 441.0, 1, 0.0);
+        let osc2 = RawSource::new("osc2", 445.0, 3, 0.0);
         let mixer = Mixer::new(
             "osc_mixer",
             2,
@@ -132,6 +133,10 @@ impl TheOneOhOne {
             .expect("cannot add instrument");
 
         rack
+    }
+
+    fn amplify(&mut self, sample: f32) -> f32 {
+        sample * self.amp.value()
     }
 }
 
@@ -248,8 +253,13 @@ impl Instrument for TheOneOhOne {
 
             self.handle_events_at_sample(sample_offset, events);
 
+            self.amp_envelope.step(one_sample_window as u64);
+            self.amp.set(self.amp_envelope.volume());
+
             for port in [TheOneOhOnePorts::OUT_LEFT, TheOneOhOnePorts::OUT_RIGHT] {
-                let sample = self.get_sample_from_input(port)?;
+                let mut sample = self.get_sample_from_input(port)?;
+                sample = self.amplify(sample);
+
                 let name = self.info.name().to_owned();
                 let output = self.ports.output_port_mut(port);
 
@@ -292,33 +302,10 @@ impl Instrument for TheOneOhOne {
             }
             crate::core::commands::InstrumentCommand::Note(note, velocity) => {
                 if velocity.0 > 0.0 {
-                    // Note on
-                    // Here, set the frequency according to the note
-                    //   maybe: let f = self.oscilator1.map_note_to_frequency(note)
-                    //     (the oscilator config object can keep that logic, including settings like transpose I dunno)
-                    // initialise the envelope
-                    //   maybe: self.envelope.reset()
-                    self.internal_rack
-                        .as_mut()
-                        .expect("")
-                        .instrument("osc1")
-                        .expect("osc1 missing")
-                        .handle_command(InstrumentCommand::Set(
-                            RawSourceParameters::FREQUENCY,
-                            800.0,
-                        ));
+                    // Update the osc frequencies for the note
+                    self.amp_envelope.start();
                 } else {
-                    // Here set the envelop to release
-                    //   maybe: self.envelope.release()
-                    self.internal_rack
-                        .as_mut()
-                        .expect("")
-                        .instrument("osc1")
-                        .expect("osc1 missing")
-                        .handle_command(InstrumentCommand::Set(
-                            RawSourceParameters::FREQUENCY,
-                            1.0,
-                        ));
+                    self.amp_envelope.release();
                 }
             }
             _ => {}
