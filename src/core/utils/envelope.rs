@@ -20,7 +20,7 @@ pub struct Envelope {
     // stage (ADSR) where we are currently at
     stage: EnvelopeStage,
     // elapsed, time elapsed in the envelope (starting at 0)
-    elapsed: u64, 
+    elapsed: u64,
     // volume at which the release initiated
     volume_at_release: f32,
 }
@@ -68,38 +68,37 @@ impl Envelope {
         match self.stage {
             EnvelopeStage::Idle => 0.0,
             EnvelopeStage::Sustain => self.sustain,
-            EnvelopeStage::Attack => {
-                self.elapsed as f32 / self.attack as f32
-            },
+            EnvelopeStage::Attack => self.elapsed as f32 / self.attack as f32,
             EnvelopeStage::Decay => {
                 // slope from value at release towards sustain value
                 1.0 - (1.0 - self.sustain) * (self.elapsed - self.attack) as f32 / self.decay as f32
-            },
+            }
             EnvelopeStage::Release => {
                 // slope from volume at release to zero
-                self.volume_at_release - self.volume_at_release * self.elapsed as f32 / self.release as f32
+                self.volume_at_release
+                    - self.volume_at_release * self.elapsed as f32 / self.release as f32
             }
         }
     }
 
     /// Update the attack to a new value (in nanoseconds)
     pub fn set_attack(&mut self, attack: u64) {
-        self.attack = attack;      
+        self.attack = attack;
     }
 
     /// Update the decay to a new value (in nanoseconds)
     pub fn set_decay(&mut self, decay: u64) {
-        self.decay = decay;      
+        self.decay = decay;
     }
 
     /// Update the sustain to a new value (in volume: 0.0 - 1.0)
     pub fn set_sustain(&mut self, sustain: f32) {
-        self.sustain = sustain;      
+        self.sustain = sustain;
     }
 
     /// Update the release to a new value (in nanoseconds)
     pub fn set_release(&mut self, release: u64) {
-        self.release = release;      
+        self.release = release;
     }
 
     /// Find the stage based on the Elapsed time and the current ADSR settings
@@ -121,7 +120,6 @@ impl Envelope {
         }
     }
 }
-
 
 #[cfg(test)]
 mod envelope_tests {
