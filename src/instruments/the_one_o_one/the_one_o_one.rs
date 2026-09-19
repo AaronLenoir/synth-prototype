@@ -9,7 +9,7 @@ use crate::{
             instrument_info::InstrumentInfo,
             instrument_ports::{InstrumentPorts, PortId, PortResolver},
         },
-        utils::{envelope::Envelope, smooth_value::SmoothValue},
+        utils::midi_note::MidiNote,
     },
     instruments::{
         mixer::{
@@ -17,7 +17,7 @@ use crate::{
             mixer::{Mixer, MixerOutPorts},
         },
         raw_source::raw_source::{RawSource, RawSourceParameters, RawSourcePorts},
-        the_one_o_one::amplifier::Amplifier,
+        the_one_o_one::{amplifier::Amplifier, osc_controller::OscController},
     },
     rack::rack::Rack,
     sequencer::event::RackEvent,
@@ -32,6 +32,9 @@ pub struct TheOneOhOne {
     internal_rack: Option<Rack>,
 
     amp: Amplifier,
+
+    osc1_controller: OscController,
+    osc2_controller: OscController,
 }
 
 // Define the Ports
@@ -82,6 +85,9 @@ impl TheOneOhOne {
             ports: InstrumentPorts::new(2, 2),
             internal_rack: None,
             amp: Amplifier::new(),
+
+            osc1_controller: OscController::new(440.0, 0),
+            osc2_controller: OscController::new(440.0, 2),
         }
     }
 
@@ -116,8 +122,8 @@ impl TheOneOhOne {
         let mut rack = Rack::without_audio_out(sample_rate);
 
         // Create the necessary internal instruments
-        let osc1 = RawSource::new("osc1", 440.0, 2, 0.0);
-        let osc2 = RawSource::new("osc2", 220.0, 1, 0.0);
+        let osc1 = RawSource::new("osc1", self.osc1_controller.output_frequency(), 1, 0.0);
+        let osc2 = RawSource::new("osc2", self.osc2_controller.output_frequency(), 1, 0.0);
         let mixer = Mixer::new(
             "osc_mixer",
             2,
@@ -137,6 +143,18 @@ impl TheOneOhOne {
             .expect("cannot add instrument");
 
         rack
+    }
+
+    fn set_frequency(&mut self, osc_name: &str, value: f32) {
+        self.internal_rack
+            .as_mut()
+            .expect("")
+            .instrument(osc_name)
+            .expect(&format!("${} missing", osc_name))
+            .handle_command(InstrumentCommand::Set(
+                RawSourceParameters::FREQUENCY,
+                value,
+            ));
     }
 }
 
@@ -302,7 +320,16 @@ impl Instrument for TheOneOhOne {
             crate::core::commands::InstrumentCommand::Note(note, velocity) => {
                 if velocity.0 > 0.0 {
                     // Update the osc frequencies for the note
-                    self.amp.note_on();
+                    match MidiNote::new(note.0) {
+                        Ok(midi_note) => {
+                            self.osc1_controller.set_frequency(midi_note.to_frequency());
+                            self.osc2_controller.set_frequency(midi_note.to_frequency());
+                            self.set_frequency("osc1", self.osc1_controller.output_frequency());
+                            self.set_frequency("osc2", self.osc2_controller.output_frequency());
+                        }
+                        Err(_) => {}
+                    }
+                    self.amp.note_on(velocity.0);
                 } else {
                     self.amp.note_off();
                 }
