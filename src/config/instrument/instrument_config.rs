@@ -6,14 +6,11 @@ use crate::{
     core::{
         commands::{InstrumentCommand, NoteNumber, ParameterId, Velocity},
         instrument::instrument::Instrument,
-    },
-    instruments::{
-        mixer::{
+    }, instruments::{
+        delay::{self, delay::Delay}, mixer::{
             channel_parameters::ChannelParameters,
             mixer::{Mixer as MixerInstrument, MixerParameters as MixerInstrumentParameters},
-        },
-        raw_source::{self, raw_source::RawSource},
-        the_one_o_one::{self, the_one_o_one::TheOneOhOne},
+        }, raw_source::{self, raw_source::RawSource}, the_one_o_one::{self, the_one_o_one::TheOneOhOne},
     },
 };
 
@@ -54,6 +51,16 @@ pub struct MixerChannelParameters {
     pub balance: f32,
 }
 
+//// Parameters for the delay
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct DelayParameters {
+    // Delay time in seconds
+    pub delay: f32,
+
+    // Decay (0.0 - 1.0)
+    pub decay: f32,
+}
+
 /// Maps to the [[instruments]] section(s) in the toml file, each
 /// instrument requires an entry here, the name property is mandatory
 /// any other parameters can vary per instrument
@@ -71,6 +78,10 @@ pub enum InstrumentConfig {
     TheOneOhOne {
         name: String,
     },
+    Delay {
+        name: String,
+        parameters: DelayParameters,
+    }
 }
 
 /// Instrument specific logic for InstrumentConfig
@@ -96,6 +107,10 @@ impl InstrumentConfig {
                 parameters.fm_depth,
             )),
             InstrumentConfig::TheOneOhOne { name } => Box::new(TheOneOhOne::new(name)),
+            InstrumentConfig::Delay { name, parameters } => Box::new(Delay::new(
+                name,
+                parameters.delay,
+                parameters.decay)),
         }
     }
 
@@ -107,6 +122,7 @@ impl InstrumentConfig {
             InstrumentConfig::Mixer { name, .. } => name,
             InstrumentConfig::RawSource { name, .. } => name,
             InstrumentConfig::TheOneOhOne { name, .. } => name,
+            InstrumentConfig::Delay { name, .. } => name,
         }
     }
 
@@ -151,6 +167,15 @@ impl InstrumentConfig {
                 "f" | "frequency" => {
                     Ok(the_one_o_one::the_one_o_one::TheOneOhOneParameters::FREQUENCY)
                 }
+                _ => Err(InstrumentConfigError::UnknownParameter(
+                    parameter_name.to_string(),
+                )),
+            },
+            InstrumentConfig::Delay { 
+                name: _, parameters: _ 
+            } => match parameter_name {
+                "delay" => Ok(delay::delay::DelayParameters::DELAY),
+                "decay" => Ok(delay::delay::DelayParameters::DECAY),
                 _ => Err(InstrumentConfigError::UnknownParameter(
                     parameter_name.to_string(),
                 )),

@@ -1,0 +1,95 @@
+[rack]
+
+[[instruments]]
+type="TheOneOhOne"
+name="synth1"
+
+[[instruments]]
+type="Delay"
+name="delay1"
+[instruments.parameters]
+delay=1
+decay=0.9
+
+# [source instrument, source port, target instrument, target port]
+[connections]
+endpoints = [
+    ["synth1", "OUT_LEFT", "delay1", "IN_LEFT" ],
+    ["synth1", "OUT_RIGHT", "delay1", "IN_RIGHT" ],
+
+    # MAIN AUDIO OUT
+    ["delay1", "OUT_LEFT", "__AUDIO_OUT", "IN_LEFT" ],
+    ["delay1", "OUT_RIGHT", "__AUDIO_OUT", "IN_RIGHT" ],
+]
+
+[sequencer]
+tempo=200
+meter={ numerator = 3, denominator = 4 }
+
+[[sequencer.clips]]
+start={ bar = 1, beat = 1, offset = 0.0 }
+end={ bar = 100, beat = 2, offset = 0.0 } 
+target = "synth1"
+
+# Alternate between waveforms every 1/8 beat
+[sequencer.clips.pattern]
+period = 1
+command = "note"
+events = [
+    { note = 55, velocity = 1.0 },
+    { note = 55, velocity = 1.0 },
+    { note = 57, velocity = 1.0 },
+    { note = 55, velocity = 1.0 },
+    { note = 60, velocity = 1.0 },
+    { note = 59, velocity = 1.0 },
+    {},
+    { note = 55, velocity = 1.0 },
+    { note = 55, velocity = 1.0 },
+    { note = 57, velocity = 1.0 },
+    { note = 55, velocity = 1.0 },
+    { note = 62, velocity = 1.0 },
+    { note = 60, velocity = 1.0 },
+    {},
+    { note = 55, velocity = 1.0 },
+    { note = 55, velocity = 1.0 },
+    { note = 67, velocity = 1.0 },
+    { note = 64, velocity = 1.0 },
+    { note = 60, velocity = 1.0 },
+    { note = 59, velocity = 1.0 },
+    { note = 57, velocity = 1.0 },
+    {},
+    { note = 65, velocity = 0.1 },
+    { note = 65, velocity = 0.2 },
+    { note = 64, velocity = 0.3 },
+    { note = 60, velocity = 0.4 },
+    { note = 62, velocity = 0.5 },
+    { note = 60, velocity = 0.6 },
+    {},
+    {},
+    {},
+    {},
+]
+
+# [[sequencer.clips.notes]]
+# note = 48
+# velocity = 1.0
+# start = { bar = 1, beat = 1, offset = 0.0 }
+# end = { bar = 2, beat = 1, offset = 0.5 }
+
+# [[sequencer.clips.notes]]
+# note = 60
+# velocity = 0.5
+# start = { bar = 2, beat = 1, offset = 0.0 }
+# end = { bar = 3, beat = 1, offset = 0.5 }
+
+# [[sequencer.clips.notes]]
+# note = 72
+# velocity = 0.5
+# start = { bar = 3, beat = 1, offset = 0.0 }
+# end = { bar = 4, beat = 1, offset = 0.5 }
+
+# [[sequencer.clips.notes]]
+# note = 84
+# velocity = 0.5
+# start = { bar = 4, beat = 1, offset = 0.0 }
+# end = { bar = 5, beat = 1, offset = 0.5 }
