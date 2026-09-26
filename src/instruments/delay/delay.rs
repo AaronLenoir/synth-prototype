@@ -1,4 +1,4 @@
-use crate::core::{commands::ParameterId, instrument::{instrument::Instrument, instrument_error::InstrumentError, instrument_info::InstrumentInfo, instrument_ports::{InstrumentPorts, PortId, PortResolver}}};
+use crate::{core::{commands::ParameterId, instrument::{instrument::Instrument, instrument_error::InstrumentError, instrument_info::InstrumentInfo, instrument_ports::{InstrumentPorts, PortId, PortResolver}}}, instruments::delay::delay_buffer::DelayBuffer};
 
 pub struct DelayPorts;
 
@@ -21,8 +21,12 @@ pub struct Delay {
     info: InstrumentInfo,
     ports: InstrumentPorts,
 
+    sample_rate: u32,
+
     delay: f32,
     decay: f32,
+
+    buffers: Vec<DelayBuffer>,
 }
 
 impl Delay {
@@ -32,21 +36,35 @@ impl Delay {
             ports: InstrumentPorts::new(2, 2),
             delay: delay,
             decay: decay,
+
+            buffers: vec![],
+
+            sample_rate: 1,
         }
     }
 
     pub fn process_sample(&mut self, in_port: PortId, out_port: PortId) -> Result<(), InstrumentError>  {
+        let buffer_index = match in_port {
+            DelayPorts::IN_LEFT => 0,
+            DelayPorts::IN_RIGHT => 1,
+            _ => return Err(InstrumentError::GeneralError("no buffer exists".to_string())),
+        };
         let in_port = self.ports.input_port_mut(in_port);
-
         let input_sample = in_port.read_if_connected().unwrap_or(0.0);
 
-        let out_port = self.ports.output_port_mut(out_port);
+        self.buffers[buffer_index].push(input_sample);
 
+        let out_port = self.ports.output_port_mut(out_port);
         out_port.write_if_connected(
-            input_sample
+            self.buffers[buffer_index].pop()
         ).map_err(|e| InstrumentError::from_port_error(&self.info.name().to_owned(), e))?;
 
         Ok(())
+    }
+
+    /// Based on the delay (in seconds) and the sample_rate calculates how many samples to delay
+    fn get_delay_in_samples(&self) -> usize {
+        (self.sample_rate as f32 * self.delay) as usize
     }
 }
 
@@ -57,6 +75,17 @@ impl Instrument for Delay {
 
     fn ports(&mut self) -> &mut InstrumentPorts {
         &mut self.ports
+    }
+
+    fn initialize(&mut self, sample_rate: u32) -> Result<(), InstrumentError> {
+        self.sample_rate = sample_rate;
+
+        let buffer_size = (sample_rate * 10) as usize; // max 10 seconds
+
+        self.buffers.push(DelayBuffer::new(self.get_delay_in_samples(), self.decay, buffer_size));
+        self.buffers.push(DelayBuffer::new(self.get_delay_in_samples(), self.decay, buffer_size));
+
+        Ok(())
     }
 
     fn update(

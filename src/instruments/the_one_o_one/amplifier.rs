@@ -10,7 +10,7 @@ pub struct Amplifier {
 impl Amplifier {
     pub fn new() -> Self {
         Self {
-            amp_envelope: Envelope::new(0, 1_000_000_000, 0.5, 5_000_000_000),
+            amp_envelope: Envelope::new(50_000_000, 1_000_000_000, 0.5, 5_000_000_000),
             amp: SmoothValue::new(0.0),
 
             scale: 1.0,
